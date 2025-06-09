@@ -1,0 +1,7 @@
+{
+  "workbench.colorCustomizations": {
+    "minimap.background": "#00000000",
+    "scrollbar.shadow": "#00000000"
+  },
+  "dart.flutterSdkPath": ".fvm/versions/3.32.2"
+}

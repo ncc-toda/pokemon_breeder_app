@@ -1,0 +1,30 @@
+name: design_system
+description: A design system for the application.
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ^3.6.0
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Widgetbook.
+  widgetbook: ^3.6.0
+
+  # Code generation.
+  widgetbook_generator: ^3.6.0
+  build_runner: ^2.4.0
+
+  # Static analysis.
+  flutter_lints: ^5.0.0
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: true
