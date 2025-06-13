@@ -81,7 +81,7 @@ build_rules:
 # * repomix
 .PHONY: repomix_all
 repomix_all:
-	npx repomix --ignore "**/ios/**,**/web/**,**/dart_defines/**,**/*.freezed.dart,**/*.g.dart"
+	npx repomix --ignore "**/build/**, **/ios/**, **/android/**, **/web/**,**/dart_defines/**,**/*.freezed.dart,**/*.g.dart"
 
 .PHONY: repomix_ai_rules
 repomix_ai_rules:
