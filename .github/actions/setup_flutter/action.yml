@@ -50,12 +50,12 @@ runs:
 
     # Run flutter clean.
     - name: Run flutter clean
-      run: cd app && flutter clean
+      run: cd packages/app && flutter clean
       shell: bash
 
     # Install dependencies for pub workspaces.
     - name: Install Dependencies.
-      run: cd app && flutter pub get
+      run: flutter pub get
       shell: bash
 
     # Run flutter version.
