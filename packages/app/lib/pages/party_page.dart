@@ -10,23 +10,6 @@ class PartyPage extends StatelessWidget {
       topBarContent: const DsTopBar(
         content: Text('パーティ'),
       ),
-      bottomBarContent: [
-        DsButton.iconText(
-          icon: Icons.catching_pokemon,
-          label: '図鑑',
-          onPressed: () {},
-        ),
-        DsButton.iconText(
-          icon: Icons.people,
-          label: 'パーティ',
-          onPressed: () {},
-        ),
-        DsButton.iconText(
-          icon: Icons.settings,
-          label: '設定',
-          onPressed: () {},
-        ),
-      ],
       body: Stack(
         children: [
           GridView.builder(
