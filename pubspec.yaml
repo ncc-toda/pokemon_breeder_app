@@ -9,3 +9,7 @@ workspace:
   - packages/data
   - packages/domain
   # - packages/di
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
