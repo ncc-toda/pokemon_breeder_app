@@ -6,6 +6,6 @@ workspace:
   - packages/app
   - packages/design_system
   # - packages/common
-  # - packages/data
-  # - packages/domain
+  - packages/data
+  - packages/domain
   # - packages/di

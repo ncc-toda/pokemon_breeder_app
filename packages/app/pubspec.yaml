@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   design_system:
     path: ../design_system
+  flutter_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:
