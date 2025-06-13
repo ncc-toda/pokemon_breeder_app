@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pokemon_breeder_app/pages/party_page.dart';
+import 'package:pokemon_breeder_app/core/routes/router.dart';
 
 void main() {
   runApp(
@@ -15,9 +15,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       theme: ThemeData.light(useMaterial3: true),
-      home: const PartyPage(),
+      routerConfig: goRouter,
     );
   }
 }
