@@ -5,10 +5,10 @@ on:
     branches:
       - develop
     paths-ignore:
-      - '**.md'
+      - "**.md"
   pull_request:
     paths-ignore:
-      - '**.md'
+      - "**.md"
   workflow_dispatch:
 
 permissions:
@@ -20,6 +20,15 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    strategy:
+      matrix:
+        package_path:
+          - packages/app
+          - packages/data
+          - packages/design_system
+          - packages/domain
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -32,16 +41,24 @@ jobs:
 
       - name: Create empty dot env file
         shell: bash
-        working-directory: app
+        working-directory: packages/app
         run: touch .env
 
       - name: Run analyze
         run: flutter analyze
-        working-directory: app
+        working-directory: ${{ matrix.package_path }}
 
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    strategy:
+      matrix:
+        package_path:
+          - packages/app
+          - packages/data
+          - packages/design_system
+          - packages/domain
 
     steps:
       - name: Checkout
@@ -53,9 +70,9 @@ jobs:
 
       - name: Create empty dot env file
         shell: bash
-        working-directory: app
+        working-directory: packages/app
         run: touch .env
 
       - name: Run test
         run: flutter test
-        working-directory: app
+        working-directory: ${{ matrix.package_path }}
