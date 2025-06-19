@@ -2,7 +2,6 @@ import 'package:data/src/services/api/api_client.dart';
 import 'package:data/src/services/pokemon/pokemon_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/result/result.dart';
 import 'pokemon.dart';
 
 part 'pokemon_state.g.dart';
@@ -71,7 +70,7 @@ class PokemonState extends _$PokemonState {
 
 /// PokemonService の Provider を定義。
 @riverpod
-PokemonService pokemonService(PokemonServiceRef ref) {
+PokemonService pokemonService(ref) {
   final apiClient = ApiClient();
   return PokemonService(apiClient);
 }
