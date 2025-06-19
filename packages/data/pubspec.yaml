@@ -23,6 +23,17 @@ dependencies:
 
   # The domain layer will be added as a dependency once created.
 
+  # External HTTP client
+  dio: ^5.4.0
+
+  # JSON serialization / immutable classes
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.8.1
+
+  # Domain layer dependency
+  domain:
+    path: ../domain
+
   # Riverpod code generation annotations
   riverpod_annotation: ^2.3.4
 
@@ -39,3 +50,7 @@ dev_dependencies:
   riverpod_generator: ^2.3.4
   custom_lint:
   riverpod_lint: ^2.3.4
+
+  # Freezed & JSON Serializable
+  freezed: ^3.0.6
+  json_serializable: ^6.8.0
