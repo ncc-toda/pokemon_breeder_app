@@ -10,6 +10,13 @@ resolution: workspace
 dependencies:
   meta: ^1.12.0
   freezed_annotation: ^3.0.0
+  
+  # Riverpod for state management
+  riverpod_annotation: ^2.3.4
+  
+  # Data layer dependency
+  data:
+    path: ../data
 
 dev_dependencies:
   build_runner: ^2.4.0
@@ -17,3 +24,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   very_good_analysis: ^7.0.0
   test: ^1.25.0
+  
+  # Riverpod code generation
+  riverpod_generator: ^2.3.4

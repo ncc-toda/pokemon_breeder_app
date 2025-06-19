@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element
+/// Core domain utilities.
+library core;
 
-/// Placeholder for domain core utilities.
-class _PlaceholderDomainCore {}
+export 'result/result.dart';
