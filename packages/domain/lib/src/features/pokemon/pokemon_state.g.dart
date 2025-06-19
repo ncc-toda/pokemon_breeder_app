@@ -6,7 +6,7 @@ part of 'pokemon_state.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pokemonServiceHash() => r'74dc99abe6b1b7ae878e7123efaba417439accff';
+String _$pokemonServiceHash() => r'e307b4e6755a321231fe0a2aca010bfa846c4510';
 
 /// PokemonService の Provider を定義。
 ///
@@ -25,14 +25,14 @@ final pokemonServiceProvider = AutoDisposeProvider<PokemonService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PokemonServiceRef = AutoDisposeProviderRef<PokemonService>;
-String _$pokemonStateHash() => r'869465b74c4364f7e7be27bcfd995cdb6fb9e844';
+String _$pokemonStateHash() => r'509d51630b1a7e8a3676fc0c098234e31a756f43';
 
 /// Pokemon 一覧の状態を管理するクラス。無限スクロール対応。
 ///
 /// Copied from [PokemonState].
 @ProviderFor(PokemonState)
-final pokemonStateProvider =
-    AutoDisposeNotifierProvider<PokemonState, List<Pokemon>>.internal(
+final pokemonStateProvider = AutoDisposeNotifierProvider<PokemonState,
+    AsyncValue<List<Pokemon>>>.internal(
   PokemonState.new,
   name: r'pokemonStateProvider',
   debugGetCreateSourceHash:
@@ -41,6 +41,6 @@ final pokemonStateProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PokemonState = AutoDisposeNotifier<List<Pokemon>>;
+typedef _$PokemonState = AutoDisposeNotifier<AsyncValue<List<Pokemon>>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

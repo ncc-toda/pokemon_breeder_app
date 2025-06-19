@@ -6,11 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Essential Commands
 - **Dependencies**: `make pub_get` - Install dependencies for all packages
-- **Testing**: `make test` - Run all tests across packages
+- **Testing**: `make test` - Run all tests across packages  
 - **Build Analysis**: `make analyze` - Run static analysis on all packages
 - **Formatting**: `make format` - Format all Dart code
 - **Code Generation**: `make generate` - Run build_runner for all packages
 - **Clean Build**: `make clean_pub_get` - Clean and reinstall dependencies
+
+### Flutter Commands (Use fvm)
+- **Analyzer**: `fvm flutter analyze` - Run Flutter static analysis
+- **Tests**: `fvm flutter test` - Run Flutter tests
+- **Build**: `fvm flutter build` - Build Flutter app
+- **Run**: `fvm flutter run` - Run Flutter app
 
 ### Package-Specific Commands
 - **App Tests**: `make test_app` - Test app package only
