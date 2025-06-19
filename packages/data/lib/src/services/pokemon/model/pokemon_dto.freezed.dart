@@ -86,8 +86,8 @@ class _$PokemonDtoCopyWithImpl<$Res> implements $PokemonDtoCopyWith<$Res> {
 
 /// @nodoc
 @JsonSerializable()
-class _PokemonDto implements PokemonDto {
-  const _PokemonDto({required this.name, required this.url});
+class _PokemonDto extends PokemonDto {
+  const _PokemonDto({required this.name, required this.url}) : super._();
   factory _PokemonDto.fromJson(Map<String, dynamic> json) =>
       _$PokemonDtoFromJson(json);
 

@@ -5,7 +5,9 @@ part 'pokemon_dto.g.dart';
 
 /// PokeAPI の /pokemon エンドポイントのレスポンス要素を表す DTO。
 @freezed
-class PokemonDto with _$PokemonDto {
+abstract class PokemonDto with _$PokemonDto {
+  const PokemonDto._(); // Add private constructor
+  
   const factory PokemonDto({
     required String name,
     required String url,
