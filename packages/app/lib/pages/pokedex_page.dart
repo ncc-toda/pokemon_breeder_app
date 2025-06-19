@@ -1,11 +1,50 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:design_system/design_system.dart';
+import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class PokedexPage extends StatelessWidget {
+class PokedexPage extends HookConsumerWidget {
   const PokedexPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pokemons = ref.watch(pokemonStateProvider);
+    final pokemonState = ref.watch(pokemonStateProvider.notifier);
+    final scrollController = useScrollController();
+    final isLoading = useState(false);
+
+    // 初回読み込み
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        pokemonState.fetchInitialPokemons();
+      });
+      return null;
+    }, []);
+
+    // 無限スクロールの実装
+    useEffect(() {
+      void onScroll() {
+        if (scrollController.position.pixels >=
+            scrollController.position.maxScrollExtent - 200) {
+          if (!isLoading.value) {
+            isLoading.value = true;
+            pokemonState.fetchNextPage().then((_) {
+              isLoading.value = false;
+            }).catchError((error) {
+              isLoading.value = false;
+              // エラーハンドリング（今回は簡単にログ出力）
+              debugPrint('Error loading more pokemons: $error');
+            });
+          }
+        }
+      }
+
+      scrollController.addListener(onScroll);
+      return () => scrollController.removeListener(onScroll);
+    }, [scrollController]);
+
     return DsScaffold(
       topBarContent: DsTopBar(
         content: Row(
@@ -25,7 +64,11 @@ class PokedexPage extends StatelessWidget {
         children: [
           _buildFilterBar(),
           Expanded(
-            child: _buildPokedexGrid(),
+            child: _buildPokemonList(
+              pokemons: pokemons,
+              scrollController: scrollController,
+              isLoading: isLoading.value,
+            ),
           ),
         ],
       ),
@@ -42,80 +85,111 @@ class PokedexPage extends StatelessWidget {
           DsChoiceChip(
             label: 'カントー',
             selected: true,
-            onSelected: (selected) {},
+            onSelected: (selected) {
+              // TODO(tetsu): フィルター機能
+            },
           ),
           DsChoiceChip(
             label: 'ジョウト',
             selected: false,
-            onSelected: (selected) {},
+            onSelected: (selected) {
+              // TODO(tetsu): フィルター機能
+            },
           ),
           DsChoiceChip(
             label: 'ホウエン',
             selected: false,
-            onSelected: (selected) {},
+            onSelected: (selected) {
+              // TODO(tetsu): フィルター機能
+            },
           ),
-          // 他の世代も同様に追加
         ],
       ),
     );
   }
 
-  Widget _buildPokedexGrid() {
-    return GridView.builder(
+  Widget _buildPokemonList({
+    required List<Pokemon> pokemons,
+    required ScrollController scrollController,
+    required bool isLoading,
+  }) {
+    if (pokemons.isEmpty && !isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    return ListView.builder(
+      controller: scrollController,
       padding: DsPadding.allS,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1,
-        crossAxisSpacing: DsSpacing.s,
-        mainAxisSpacing: DsSpacing.s,
-      ),
-      // 無限スクロールを模倣するために大きな数を設定
-      itemCount: 151,
+      itemCount: pokemons.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
-        final pokedexNumber = (index + 1).toString().padLeft(3, '0');
-        return _PokedexCell(
-          pokedexNumber: pokedexNumber,
-          isDiscovered: index % 5 != 0, // ダミーの発見状態
-        );
+        if (index >= pokemons.length) {
+          // ローディングインジケーター
+          return const Padding(
+            padding: DsPadding.allM,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final pokemon = pokemons[index];
+        return _PokemonListItem(pokemon: pokemon);
       },
     );
   }
 }
 
-class _PokedexCell extends StatelessWidget {
-  const _PokedexCell({
-    required this.pokedexNumber,
-    required this.isDiscovered,
-  });
+class _PokemonListItem extends StatelessWidget {
+  const _PokemonListItem({required this.pokemon});
 
-  final String pokedexNumber;
-  final bool isDiscovered;
+  final Pokemon pokemon;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
+      margin: const EdgeInsets.only(bottom: DsSpacing.s),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DsRadius.m),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'No.$pokedexNumber',
-            style: DsTypography.labelSmall.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: ListTile(
+        leading: SizedBox(
+          width: 64,
+          height: 64,
+          child: CachedNetworkImage(
+            imageUrl: pokemon.imageUrl,
+            placeholder: (context, url) => const Center(
+              child: CircularProgressIndicator(),
             ),
-          ),
-          const SizedBox(height: DsSpacing.s),
-          Expanded(
-            child: Placeholder(
-              color: isDiscovered
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.black,
+            errorWidget: (context, url, error) => Container(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Icon(
+                Icons.image_not_supported,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
+            fit: BoxFit.contain,
           ),
-        ],
+        ),
+        title: Text(
+          pokemon.displayName,
+          style: DsTypography.titleMedium,
+        ),
+        subtitle: Text(
+          pokemon.formattedPokedexNumber,
+          style: DsTypography.bodySmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () {
+            // TODO(tetsu): パーティに追加する処理
+          },
+        ),
+        onTap: () {
+          // TODO(tetsu): Pokemon詳細画面への遷移
+        },
       ),
     );
   }
