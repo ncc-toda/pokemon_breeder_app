@@ -1,5 +1,6 @@
 import 'package:data/src/services/api/api_client.dart';
 import 'package:data/src/services/pokemon/pokemon_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'pokemon.dart';
@@ -12,41 +13,68 @@ class PokemonState extends _$PokemonState {
   static const int _pageSize = 20;
 
   @override
-  List<Pokemon> build() {
-    return [];
+  AsyncValue<List<Pokemon>> build() {
+    return const AsyncValue.data([]);
   }
 
   /// Pokemon 一覧を初期読み込みする。
   Future<void> fetchInitialPokemons() async {
-    state = [];
-    await _fetchPokemons(offset: 0);
+    state = const AsyncValue.loading();
+    await _fetchPokemons(offset: 0, isInitial: true);
   }
 
   /// 次のページの Pokemon 一覧を読み込む。
   Future<void> fetchNextPage() async {
-    final currentOffset = state.length;
-    await _fetchPokemons(offset: currentOffset);
+    final currentList = state.valueOrNull ?? [];
+    if (currentList.isEmpty) return;
+    
+    await _fetchPokemons(offset: currentList.length, isInitial: false);
   }
 
   /// 指定されたオフセットから Pokemon 一覧を取得する。
-  Future<void> _fetchPokemons({required int offset}) async {
-    final pokemonService = ref.read(pokemonServiceProvider);
-    
-    final result = await pokemonService.fetchPokemons(
-      limit: _pageSize,
-      offset: offset,
-    );
+  Future<void> _fetchPokemons({
+    required int offset,
+    required bool isInitial,
+  }) async {
+    try {
+      final pokemonService = ref.read(pokemonServiceProvider);
+      
+      final result = await pokemonService.fetchPokemons(
+        limit: _pageSize,
+        offset: offset,
+      );
 
-    result.when(
-      success: (pokemonDtos) {
-        final newPokemons = pokemonDtos.map(_convertToEntity).toList();
-        state = [...state, ...newPokemons];
-      },
-      failure: (failure) {
-        // エラーハンドリングは上位層に委譲
-        throw Exception('Failed to fetch pokemons: ${failure.toString()}');
-      },
-    );
+      await result.when(
+        success: (pokemonDtos) async {
+          final newPokemons = pokemonDtos.map(_convertToEntity).toList();
+          final currentList = isInitial ? <Pokemon>[] : (state.valueOrNull ?? []);
+          state = AsyncValue.data([...currentList, ...newPokemons]);
+        },
+        failure: (failure) async {
+          if (isInitial) {
+            state = AsyncValue.error(
+              Exception('ポケモンデータの取得に失敗しました: ${failure.toString()}'),
+              StackTrace.current,
+            );
+          } else {
+            // 無限スクロール中のエラーは現在の状態を保持
+            // エラー情報はログに出力のみ
+            debugPrint('Additional pokemon fetch failed: ${failure.toString()}');
+          }
+        },
+      );
+    } catch (error, stackTrace) {
+      if (isInitial) {
+        state = AsyncValue.error(error, stackTrace);
+      } else {
+        debugPrint('Unexpected error during pokemon fetch: $error');
+      }
+    }
+  }
+
+  /// エラー状態からのリトライ。
+  Future<void> retry() async {
+    await fetchInitialPokemons();
   }
 
   /// PokemonDTO を Pokemon エンティティに変換する。
