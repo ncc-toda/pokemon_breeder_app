@@ -92,8 +92,8 @@ class DsSearchBar extends StatelessWidget {
 class DsSearchResultInfo extends StatelessWidget {
   /// 検索結果情報ウィジェットを作成する。
   const DsSearchResultInfo({
-    super.key,
     required this.resultCount,
+    super.key,
     this.query = '',
     this.onClear,
   });
@@ -112,7 +112,10 @@ class DsSearchResultInfo extends StatelessWidget {
     if (query.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DsSpacing.m, vertical: DsSpacing.s),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DsSpacing.m,
+        vertical: DsSpacing.s,
+      ),
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Row(
         children: [
