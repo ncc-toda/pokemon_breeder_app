@@ -6,33 +6,33 @@ part of 'pokemon_state.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$filteredPokemonsHash() => r'48e961f502fd93833551bedbf766d3ddd27d5022';
+String _$pokemonServiceHash() => r'e307b4e6755a321231fe0a2aca010bfa846c4510';
 
-/// フィルタリングされたPokemonリストを提供するProvider。
+/// PokemonService の Provider を定義。
 ///
-/// Copied from [filteredPokemons].
-@ProviderFor(filteredPokemons)
-final filteredPokemonsProvider = AutoDisposeProvider<List<Pokemon>>.internal(
-  filteredPokemons,
-  name: r'filteredPokemonsProvider',
+/// Copied from [pokemonService].
+@ProviderFor(pokemonService)
+final pokemonServiceProvider = AutoDisposeProvider<PokemonService>.internal(
+  pokemonService,
+  name: r'pokemonServiceProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$filteredPokemonsHash,
+      : _$pokemonServiceHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef FilteredPokemonsRef = AutoDisposeProviderRef<List<Pokemon>>;
-String _$pokemonStateHash() => r'4ca2bca44327423093e625f2551bf2d8be2e5391';
+typedef PokemonServiceRef = AutoDisposeProviderRef<PokemonService>;
+String _$pokemonStateHash() => r'509d51630b1a7e8a3676fc0c098234e31a756f43';
 
-/// Pokemon 一覧の状態を管理するクラス。検索機能とフィルタリング対応。
+/// Pokemon 一覧の状態を管理するクラス。無限スクロール対応。
 ///
 /// Copied from [PokemonState].
 @ProviderFor(PokemonState)
-final pokemonStateProvider =
-    AutoDisposeNotifierProvider<PokemonState, List<Pokemon>>.internal(
+final pokemonStateProvider = AutoDisposeNotifierProvider<PokemonState,
+    AsyncValue<List<Pokemon>>>.internal(
   PokemonState.new,
   name: r'pokemonStateProvider',
   debugGetCreateSourceHash:
@@ -41,7 +41,7 @@ final pokemonStateProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PokemonState = AutoDisposeNotifier<List<Pokemon>>;
+typedef _$PokemonState = AutoDisposeNotifier<AsyncValue<List<Pokemon>>>;
 String _$searchQueryStateHash() => r'ba3fbaddcb960af844979c964d25aa9f53da96b3';
 
 /// 検索クエリの状態を管理するProvider。
