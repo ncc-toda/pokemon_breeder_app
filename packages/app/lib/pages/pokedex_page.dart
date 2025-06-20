@@ -250,13 +250,13 @@ class PokedexPage extends HookConsumerWidget {
   }
 }
 
-class _PokemonListItem extends StatelessWidget {
+class _PokemonListItem extends ConsumerWidget {
   const _PokemonListItem({required this.pokemon});
 
   final Pokemon pokemon;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: DsSpacing.s),
@@ -292,15 +292,53 @@ class _PokemonListItem extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: () {
-            // TODO(tetsu): パーティに追加する処理
+        trailing: Consumer(
+          builder: (context, ref, child) {
+            final currentPartyAsync = ref.watch(currentPartyStateProvider);
+            final currentParty = currentPartyAsync.valueOrNull;
+            
+            // パーティが満席かどうか、または既に追加済みかをチェック
+            final isAlreadyAdded = currentParty?.pokemonIds.contains(pokemon.id) ?? false;
+            final isPartyFull = currentParty?.isFull ?? false;
+            
+            return IconButton(
+              icon: Icon(
+                isAlreadyAdded ? Icons.check : Icons.add,
+                color: isAlreadyAdded ? Theme.of(context).colorScheme.primary : null,
+              ),
+              onPressed: (isAlreadyAdded || isPartyFull) ? null : () {
+                _addToParty(context, ref, pokemon);
+              },
+              tooltip: isAlreadyAdded 
+                ? 'パーティに追加済み'
+                : isPartyFull 
+                  ? 'パーティが満席です'
+                  : 'パーティに追加',
+            );
           },
         ),
         onTap: () {
           // TODO(tetsu): Pokemon詳細画面への遷移
         },
+      ),
+    );
+  }
+
+  /// ポケモンをパーティに追加する。
+  void _addToParty(BuildContext context, WidgetRef ref, Pokemon pokemon) {
+    ref.read(currentPartyStateProvider.notifier).addPokemonToParty(pokemon.id);
+    
+    // スナックバーで成功メッセージを表示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${pokemon.displayName} をパーティに追加しました'),
+        duration: const Duration(seconds: 2),
+        action: SnackBarAction(
+          label: '取り消し',
+          onPressed: () {
+            ref.read(currentPartyStateProvider.notifier).removePokemonFromParty(pokemon.id);
+          },
+        ),
       ),
     );
   }
