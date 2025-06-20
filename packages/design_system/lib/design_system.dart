@@ -6,6 +6,7 @@ export 'src/components/ds_choice_chip.dart';
 export 'src/components/ds_divider.dart';
 export 'src/components/ds_icon.dart';
 export 'src/components/ds_scaffold.dart';
+export 'src/components/ds_search_bar.dart';
 export 'src/components/ds_segmented_button.dart';
 export 'src/components/ds_shimmer.dart';
 export 'src/components/ds_slider.dart';

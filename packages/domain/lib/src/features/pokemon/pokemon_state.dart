@@ -96,6 +96,25 @@ class PokemonState extends _$PokemonState {
   }
 }
 
+/// 検索クエリの状態を管理するProvider。
+@riverpod
+class SearchQueryState extends _$SearchQueryState {
+  @override
+  String build() {
+    return '';
+  }
+
+  /// 検索クエリを更新する。
+  void updateQuery(String query) {
+    state = query.trim();
+  }
+
+  /// 検索クエリをクリアする。
+  void clearQuery() {
+    state = '';
+  }
+}
+
 /// PokemonService の Provider を定義。
 @riverpod
 PokemonService pokemonService(ref) {

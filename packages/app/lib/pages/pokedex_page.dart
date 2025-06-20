@@ -10,10 +10,26 @@ class PokedexPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // API データ関連の状態
     final pokemonAsyncValue = ref.watch(pokemonStateProvider);
     final pokemonState = ref.watch(pokemonStateProvider.notifier);
+    
+    // 検索機能関連の状態
+    final searchQuery = ref.watch(searchQueryStateProvider);
+    final searchController = useTextEditingController(text: searchQuery);
+    
+    // 無限スクロール関連の状態
     final scrollController = useScrollController();
     final isLoadingMore = useState(false);
+
+    // フィルタリングされたポケモンリスト
+    final filteredPokemons = useMemoized(() {
+      final allPokemons = pokemonAsyncValue.valueOrNull ?? [];
+      if (searchQuery.isEmpty) {
+        return allPokemons;
+      }
+      return allPokemons.where((pokemon) => pokemon.matchesSearchQuery(searchQuery)).toList();
+    }, [pokemonAsyncValue, searchQuery]);
 
     // 初回読み込み
     useEffect(() {
@@ -23,9 +39,11 @@ class PokedexPage extends HookConsumerWidget {
       return null;
     }, []);
 
-    // 無限スクロールの実装
+    // 無限スクロールの実装（検索中は無効化）
     useEffect(() {
       void onScroll() {
+        if (searchQuery.isNotEmpty) return; // 検索中は無限スクロール無効
+        
         final pokemons = pokemonAsyncValue.valueOrNull;
         if (pokemons == null || pokemons.isEmpty) return;
         
@@ -45,33 +63,59 @@ class PokedexPage extends HookConsumerWidget {
 
       scrollController.addListener(onScroll);
       return () => scrollController.removeListener(onScroll);
-    }, [scrollController, pokemonAsyncValue]);
+    }, [scrollController, pokemonAsyncValue, searchQuery]);
 
     return DsScaffold(
       topBarContent: DsTopBar(
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('ポケモン図鑑'),
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                // TODO(tetsu): 検索処理
-              },
-            ),
-          ],
-        ),
+        content: const Text('ポケモン図鑑'),
       ),
       body: Column(
         children: [
+          // 検索バー
+          Padding(
+            padding: DsPadding.allS,
+            child: DsSearchBar(
+              controller: searchController,
+              hintText: 'ポケモン名または図鑑番号で検索',
+              onChanged: (query) {
+                ref.read(searchQueryStateProvider.notifier).updateQuery(query);
+              },
+              onClear: () {
+                searchController.clear();
+                ref.read(searchQueryStateProvider.notifier).updateQuery('');
+              },
+            ),
+          ),
+          
+          // 検索結果情報
+          if (searchQuery.isNotEmpty)
+            Padding(
+              padding: DsPadding.horizontalS,
+              child: DsSearchResultInfo(
+                resultCount: filteredPokemons.length,
+                query: searchQuery,
+              ),
+            ),
+            
+          // フィルターバー
           _buildFilterBar(),
+          
+          // ポケモンリスト
           Expanded(
             child: pokemonAsyncValue.when(
-              data: (pokemons) => _buildPokemonList(
-                pokemons: pokemons,
-                scrollController: scrollController,
-                isLoadingMore: isLoadingMore.value,
-              ),
+              data: (pokemons) {
+                // 検索結果が空の場合の処理
+                if (searchQuery.isNotEmpty && filteredPokemons.isEmpty) {
+                  return DsSearchEmptyState(query: searchQuery);
+                }
+                
+                return _buildPokemonList(
+                  pokemons: searchQuery.isNotEmpty ? filteredPokemons : pokemons,
+                  scrollController: scrollController,
+                  isLoadingMore: isLoadingMore.value,
+                  showLoadingMore: searchQuery.isEmpty, // 検索中は追加読み込み表示しない
+                );
+              },
               loading: () => _buildShimmerList(),
               error: (error, stackTrace) => _buildErrorView(
                 error: error,
@@ -121,6 +165,7 @@ class PokedexPage extends HookConsumerWidget {
     required List<Pokemon> pokemons,
     required ScrollController scrollController,
     required bool isLoadingMore,
+    required bool showLoadingMore,
   }) {
     if (pokemons.isEmpty) {
       return const Center(
@@ -131,7 +176,7 @@ class PokedexPage extends HookConsumerWidget {
     return ListView.builder(
       controller: scrollController,
       padding: DsPadding.allS,
-      itemCount: pokemons.length + (isLoadingMore ? 1 : 0),
+      itemCount: pokemons.length + (isLoadingMore && showLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= pokemons.length) {
           // ローディングインジケーター

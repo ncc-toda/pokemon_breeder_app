@@ -42,5 +42,23 @@ final pokemonStateProvider = AutoDisposeNotifierProvider<PokemonState,
 );
 
 typedef _$PokemonState = AutoDisposeNotifier<AsyncValue<List<Pokemon>>>;
+String _$searchQueryStateHash() => r'ba3fbaddcb960af844979c964d25aa9f53da96b3';
+
+/// 検索クエリの状態を管理するProvider。
+///
+/// Copied from [SearchQueryState].
+@ProviderFor(SearchQueryState)
+final searchQueryStateProvider =
+    AutoDisposeNotifierProvider<SearchQueryState, String>.internal(
+  SearchQueryState.new,
+  name: r'searchQueryStateProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$searchQueryStateHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$SearchQueryState = AutoDisposeNotifier<String>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

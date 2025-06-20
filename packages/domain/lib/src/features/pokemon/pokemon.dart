@@ -28,4 +28,32 @@ abstract class Pokemon with _$Pokemon {
   String get displayName => name.isNotEmpty 
       ? name[0].toUpperCase() + name.substring(1).toLowerCase()
       : name;
+
+  /// 検索クエリがこのPokemonにマッチするかどうかを判定する。
+  /// 
+  /// - Pokemon名（大文字小文字を区別しない部分一致）
+  /// - 図鑑番号（完全一致または部分一致）
+  bool matchesSearchQuery(String query) {
+    if (query.isEmpty) return true;
+
+    final normalizedQuery = query.toLowerCase().trim();
+    
+    // Pokemon名での検索（部分一致）
+    if (name.toLowerCase().contains(normalizedQuery)) {
+      return true;
+    }
+    
+    // 図鑑番号での検索
+    final pokedexStr = pokedexNumber.toString();
+    if (pokedexStr.contains(normalizedQuery)) {
+      return true;
+    }
+    
+    // #付き図鑑番号での検索
+    if (formattedPokedexNumber.toLowerCase().contains(normalizedQuery)) {
+      return true;
+    }
+    
+    return false;
+  }
 }
