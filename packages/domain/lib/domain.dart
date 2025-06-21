@@ -9,4 +9,5 @@ export 'src/core/core.dart';
 export 'src/features/pokemon/pokemon.dart';
 export 'src/features/pokemon/pokemon_state.dart';
 export 'src/features/party/party.dart';
+export 'src/features/party/party_pokemon.dart';
 export 'src/features/party/party_state.dart';
