@@ -291,12 +291,18 @@ class _$PartySlotCopyWithImpl<$Res> implements $PartySlotCopyWith<$Res> {
 /// @nodoc
 
 class _PartySlotFilled extends PartySlot {
-  const _PartySlotFilled({required this.pokemonId, required this.position})
+  const _PartySlotFilled(
+      {required this.partyPokemonId,
+      required this.pokemonId,
+      required this.position,
+      required this.breedingCounter})
       : super._();
 
+  final int partyPokemonId;
   final int pokemonId;
   @override
   final int position;
+  final int breedingCounter;
 
   /// Create a copy of PartySlot
   /// with the given fields replaced by the non-null parameter values.
@@ -311,18 +317,23 @@ class _PartySlotFilled extends PartySlot {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _PartySlotFilled &&
+            (identical(other.partyPokemonId, partyPokemonId) ||
+                other.partyPokemonId == partyPokemonId) &&
             (identical(other.pokemonId, pokemonId) ||
                 other.pokemonId == pokemonId) &&
             (identical(other.position, position) ||
-                other.position == position));
+                other.position == position) &&
+            (identical(other.breedingCounter, breedingCounter) ||
+                other.breedingCounter == breedingCounter));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, pokemonId, position);
+  int get hashCode => Object.hash(
+      runtimeType, partyPokemonId, pokemonId, position, breedingCounter);
 
   @override
   String toString() {
-    return 'PartySlot.filled(pokemonId: $pokemonId, position: $position)';
+    return 'PartySlot.filled(partyPokemonId: $partyPokemonId, pokemonId: $pokemonId, position: $position, breedingCounter: $breedingCounter)';
   }
 }
 
@@ -334,7 +345,8 @@ abstract mixin class _$PartySlotFilledCopyWith<$Res>
       __$PartySlotFilledCopyWithImpl;
   @override
   @useResult
-  $Res call({int pokemonId, int position});
+  $Res call(
+      {int partyPokemonId, int pokemonId, int position, int breedingCounter});
 }
 
 /// @nodoc
@@ -350,10 +362,16 @@ class __$PartySlotFilledCopyWithImpl<$Res>
   @override
   @pragma('vm:prefer-inline')
   $Res call({
+    Object? partyPokemonId = null,
     Object? pokemonId = null,
     Object? position = null,
+    Object? breedingCounter = null,
   }) {
     return _then(_PartySlotFilled(
+      partyPokemonId: null == partyPokemonId
+          ? _self.partyPokemonId
+          : partyPokemonId // ignore: cast_nullable_to_non_nullable
+              as int,
       pokemonId: null == pokemonId
           ? _self.pokemonId
           : pokemonId // ignore: cast_nullable_to_non_nullable
@@ -361,6 +379,10 @@ class __$PartySlotFilledCopyWithImpl<$Res>
       position: null == position
           ? _self.position
           : position // ignore: cast_nullable_to_non_nullable
+              as int,
+      breedingCounter: null == breedingCounter
+          ? _self.breedingCounter
+          : breedingCounter // ignore: cast_nullable_to_non_nullable
               as int,
     ));
   }
