@@ -50,7 +50,7 @@ abstract class Party with _$Party {
 
 /// パーティの表示用スロット情報。
 @freezed
-sealed class PartySlot with _$PartySlot {
+class PartySlot with _$PartySlot {
   const PartySlot._();
 
   /// 埋まっているスロット（育成カウンター情報を含む）。
@@ -69,20 +69,20 @@ sealed class PartySlot with _$PartySlot {
   /// 進化条件を満たしているかどうかを判定する。
   bool get canEvolve {
     return when(
-      filled: (_, __, ___, breedingCounter) => breedingCounter >= 10,
-      empty: (_) => false,
+      filled: (partyPokemonId, pokemonId, position, breedingCounter) => breedingCounter >= 10,
+      empty: (position) => false,
     );
   }
 
   /// 育成進捗を示すパーセンテージ（0-100）を計算する。
   int get progressPercentage {
     return when(
-      filled: (_, __, ___, breedingCounter) {
+      filled: (partyPokemonId, pokemonId, position, breedingCounter) {
         const maxCounter = 10;
         final percentage = (breedingCounter / maxCounter * 100).round();
         return percentage > 100 ? 100 : percentage;
       },
-      empty: (_) => 0,
+      empty: (position) => 0,
     );
   }
 }

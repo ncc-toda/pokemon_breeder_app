@@ -41,29 +41,53 @@ class PartyPage extends HookConsumerWidget {
                   
                   final allPokemons = allPokemonsAsync.valueOrNull ?? [];
                   
-                  return GridView.builder(
-                    padding: DsPadding.allS,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1,
-                      crossAxisSpacing: DsSpacing.s,
-                      mainAxisSpacing: DsSpacing.s,
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      if (index < party.pokemonIds.length) {
-                        final pokemonId = party.pokemonIds[index];
-                        final pokemon = allPokemons.where((p) => p.id == pokemonId).firstOrNull;
-                        return _PokemonCard(
-                          pokemon: pokemon,
-                          onTap: pokemon != null ? () => _showPokemonOptions(context, ref, pokemon) : null,
-                          onLongPress: pokemon != null ? () => _showDeleteDialog(context, ref, pokemon) : null,
-                        );
-                      } else {
-                        return _EmptySlotCard(
-                          onTap: () => context.go('/pokedex'),
-                        );
+                  return FutureBuilder<List<PartySlot>>(
+                    future: ref.read(currentPartyStateProvider.notifier).getPartySlots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
                       }
+                      
+                      final partySlots = snapshot.data ?? [];
+                      
+                      return GridView.builder(
+                        padding: DsPadding.allS,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.8, // カウンター表示のため縦を少し長く
+                          crossAxisSpacing: DsSpacing.s,
+                          mainAxisSpacing: DsSpacing.s,
+                        ),
+                        itemCount: 6,
+                        itemBuilder: (context, index) {
+                          if (index < partySlots.length) {
+                            final slot = partySlots[index];
+                            return slot.when(
+                              filled: (partyPokemonId, pokemonId, position, breedingCounter) {
+                                final pokemon = allPokemons.where((p) => p.id == pokemonId).firstOrNull;
+                                return _PokemonCard(
+                                  pokemon: pokemon,
+                                  partyPokemonId: partyPokemonId,
+                                  breedingCounter: breedingCounter,
+                                  canEvolve: slot.canEvolve,
+                                  progressPercentage: slot.progressPercentage,
+                                  onTap: pokemon != null ? () => _showPokemonOptions(context, ref, pokemon) : null,
+                                  onLongPress: pokemon != null ? () => _showDeleteDialog(context, ref, pokemon) : null,
+                                  onIncrementCounter: () => _incrementCounter(ref, partyPokemonId),
+                                  onDecrementCounter: () => _decrementCounter(ref, partyPokemonId),
+                                );
+                              },
+                              empty: (position) => _EmptySlotCard(
+                                onTap: () => context.go('/pokedex'),
+                              ),
+                            );
+                          } else {
+                            return _EmptySlotCard(
+                              onTap: () => context.go('/pokedex'),
+                            );
+                          }
+                        },
+                      );
                     },
                   );
                 },
@@ -81,6 +105,16 @@ class PartyPage extends HookConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// 育成カウンターを増加させる。
+  void _incrementCounter(WidgetRef ref, int partyPokemonId) {
+    ref.read(currentPartyStateProvider.notifier).incrementBreedingCounter(partyPokemonId);
+  }
+
+  /// 育成カウンターを減少させる。
+  void _decrementCounter(WidgetRef ref, int partyPokemonId) {
+    ref.read(currentPartyStateProvider.notifier).decrementBreedingCounter(partyPokemonId);
   }
 
   /// ポケモンの操作オプションを表示する。
@@ -159,13 +193,25 @@ class PartyPage extends HookConsumerWidget {
 class _PokemonCard extends StatelessWidget {
   const _PokemonCard({
     required this.pokemon,
+    this.partyPokemonId,
+    this.breedingCounter = 0,
+    this.canEvolve = false,
+    this.progressPercentage = 0,
     this.onTap,
     this.onLongPress,
+    this.onIncrementCounter,
+    this.onDecrementCounter,
   });
 
   final Pokemon? pokemon;
+  final int? partyPokemonId;
+  final int breedingCounter;
+  final bool canEvolve;
+  final int progressPercentage;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onIncrementCounter;
+  final VoidCallback? onDecrementCounter;
 
   @override
   Widget build(BuildContext context) {
@@ -193,6 +239,9 @@ class _PokemonCard extends StatelessWidget {
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DsRadius.xl),
+        side: canEvolve 
+          ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
+          : BorderSide.none,
       ),
       child: InkWell(
         onTap: onTap,
@@ -201,39 +250,121 @@ class _PokemonCard extends StatelessWidget {
         child: Padding(
           padding: DsPadding.allS,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(DsRadius.m),
-                child: Image.network(
-                  pokemon!.imageUrl,
-                  height: DsDimension.iconSizeXxl,
-                  width: DsDimension.iconSizeXxl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: DsDimension.iconSizeXxl,
-                      width: DsDimension.iconSizeXxl,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              // ポケモン画像とプログレスバー
+              Expanded(
+                flex: 3,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(DsRadius.m),
+                        child: Image.network(
+                          pokemon!.imageUrl,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(DsRadius.m),
+                              ),
+                              child: Icon(
+                                Icons.catching_pokemon,
+                                size: DsDimension.iconSizeL,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      child: Icon(
-                        Icons.catching_pokemon,
-                        size: DsDimension.iconSizeL,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: DsSpacing.xs),
+                    // プログレスバー
+                    LinearProgressIndicator(
+                      value: progressPercentage / 100.0,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        canEvolve 
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.secondary,
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: DsSpacing.s),
-              Text(
-                pokemon!.displayName,
-                style: DsTypography.titleSmall,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              
+              // ポケモン名
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: DsSpacing.xs),
+                child: Text(
+                  pokemon!.displayName,
+                  style: DsTypography.bodySmall,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              
+              // 育成カウンター操作部分
+              Expanded(
+                flex: 1,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // マイナスボタン
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: breedingCounter > 0 ? onDecrementCounter : null,
+                        icon: const Icon(Icons.remove, size: 16),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.surface,
+                          foregroundColor: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    
+                    // カウンター表示
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$breedingCounter',
+                          style: DsTypography.titleMedium.copyWith(
+                            color: canEvolve 
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (canEvolve)
+                          Icon(
+                            Icons.star,
+                            size: 12,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                      ],
+                    ),
+                    
+                    // プラスボタン
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: onIncrementCounter,
+                        icon: const Icon(Icons.add, size: 16),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.surface,
+                          foregroundColor: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
