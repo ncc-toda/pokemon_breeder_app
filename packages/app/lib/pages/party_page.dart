@@ -57,6 +57,7 @@ class PartyPage extends HookConsumerWidget {
                         return _PokemonCard(
                           pokemon: pokemon,
                           onTap: pokemon != null ? () => _showPokemonOptions(context, ref, pokemon) : null,
+                          onLongPress: pokemon != null ? () => _showDeleteDialog(context, ref, pokemon) : null,
                         );
                       } else {
                         return _EmptySlotCard(
@@ -104,11 +105,51 @@ class PartyPage extends HookConsumerWidget {
                 title: const Text('パーティから外す'),
                 onTap: () {
                   Navigator.pop(context);
-                  ref.read(currentPartyStateProvider.notifier).removePokemonFromParty(pokemon.id);
+                  _showDeleteDialog(context, ref, pokemon);
                 },
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  /// ポケモンをパーティから削除する確認ダイアログを表示する。
+  void _showDeleteDialog(BuildContext context, WidgetRef ref, Pokemon pokemon) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('パーティから外す'),
+          content: Text('${pokemon.displayName} をパーティから外しますか？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('キャンセル'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ref.read(currentPartyStateProvider.notifier).removePokemonFromParty(pokemon.id);
+                
+                // スナックバーで削除完了メッセージを表示
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${pokemon.displayName} をパーティから外しました'),
+                    duration: const Duration(seconds: 2),
+                    action: SnackBarAction(
+                      label: '取り消し',
+                      onPressed: () {
+                        ref.read(currentPartyStateProvider.notifier).addPokemonToParty(pokemon.id);
+                      },
+                    ),
+                  ),
+                );
+              },
+              child: const Text('外す'),
+            ),
+          ],
         );
       },
     );
@@ -119,10 +160,12 @@ class _PokemonCard extends StatelessWidget {
   const _PokemonCard({
     required this.pokemon,
     this.onTap,
+    this.onLongPress,
   });
 
   final Pokemon? pokemon;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +196,7 @@ class _PokemonCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(DsRadius.xl),
         child: Padding(
           padding: DsPadding.allS,
