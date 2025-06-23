@@ -13,11 +13,11 @@ class PokedexPage extends HookConsumerWidget {
     // API データ関連の状態
     final pokemonAsyncValue = ref.watch(pokemonStateProvider);
     final pokemonState = ref.watch(pokemonStateProvider.notifier);
-    
+
     // 検索機能関連の状態
     final searchQuery = ref.watch(searchQueryStateProvider);
     final searchController = useTextEditingController(text: searchQuery);
-    
+
     // 無限スクロール関連の状態
     final scrollController = useScrollController();
     final isLoadingMore = useState(false);
@@ -28,7 +28,9 @@ class PokedexPage extends HookConsumerWidget {
       if (searchQuery.isEmpty) {
         return allPokemons;
       }
-      return allPokemons.where((pokemon) => pokemon.matchesSearchQuery(searchQuery)).toList();
+      return allPokemons
+          .where((pokemon) => pokemon.matchesSearchQuery(searchQuery))
+          .toList();
     }, [pokemonAsyncValue, searchQuery]);
 
     // 初回読み込み
@@ -43,10 +45,10 @@ class PokedexPage extends HookConsumerWidget {
     useEffect(() {
       void onScroll() {
         if (searchQuery.isNotEmpty) return; // 検索中は無限スクロール無効
-        
+
         final pokemons = pokemonAsyncValue.valueOrNull;
         if (pokemons == null || pokemons.isEmpty) return;
-        
+
         if (scrollController.position.pixels >=
             scrollController.position.maxScrollExtent - 200) {
           if (!isLoadingMore.value && pokemonAsyncValue.hasValue) {
@@ -86,7 +88,7 @@ class PokedexPage extends HookConsumerWidget {
               },
             ),
           ),
-          
+
           // 検索結果情報
           if (searchQuery.isNotEmpty)
             Padding(
@@ -96,10 +98,10 @@ class PokedexPage extends HookConsumerWidget {
                 query: searchQuery,
               ),
             ),
-            
+
           // フィルターバー
           _buildFilterBar(),
-          
+
           // ポケモンリスト
           Expanded(
             child: pokemonAsyncValue.when(
@@ -108,9 +110,10 @@ class PokedexPage extends HookConsumerWidget {
                 if (searchQuery.isNotEmpty && filteredPokemons.isEmpty) {
                   return DsSearchEmptyState(query: searchQuery);
                 }
-                
+
                 return _buildPokemonList(
-                  pokemons: searchQuery.isNotEmpty ? filteredPokemons : pokemons,
+                  pokemons:
+                      searchQuery.isNotEmpty ? filteredPokemons : pokemons,
                   scrollController: scrollController,
                   isLoadingMore: isLoadingMore.value,
                   showLoadingMore: searchQuery.isEmpty, // 検索中は追加読み込み表示しない
@@ -296,24 +299,29 @@ class _PokemonListItem extends ConsumerWidget {
           builder: (context, ref, child) {
             final currentPartyAsync = ref.watch(currentPartyStateProvider);
             final currentParty = currentPartyAsync.valueOrNull;
-            
+
             // パーティが満席かどうか、または既に追加済みかをチェック
-            final isAlreadyAdded = currentParty?.pokemonIds.contains(pokemon.id) ?? false;
+            final isAlreadyAdded =
+                currentParty?.pokemonIds.contains(pokemon.id) ?? false;
             final isPartyFull = currentParty?.isFull ?? false;
-            
+
             return IconButton(
               icon: Icon(
                 isAlreadyAdded ? Icons.check : Icons.add,
-                color: isAlreadyAdded ? Theme.of(context).colorScheme.primary : null,
+                color: isAlreadyAdded
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
               ),
-              onPressed: (isAlreadyAdded || isPartyFull) ? null : () {
-                _addToParty(context, ref, pokemon);
-              },
-              tooltip: isAlreadyAdded 
-                ? 'パーティに追加済み'
-                : isPartyFull 
-                  ? 'パーティが満席です'
-                  : 'パーティに追加',
+              onPressed: (isAlreadyAdded || isPartyFull)
+                  ? null
+                  : () {
+                      _addToParty(context, ref, pokemon);
+                    },
+              tooltip: isAlreadyAdded
+                  ? 'パーティに追加済み'
+                  : isPartyFull
+                      ? 'パーティが満席です'
+                      : 'パーティに追加',
             );
           },
         ),
@@ -327,7 +335,7 @@ class _PokemonListItem extends ConsumerWidget {
   /// ポケモンをパーティに追加する。
   void _addToParty(BuildContext context, WidgetRef ref, Pokemon pokemon) {
     ref.read(currentPartyStateProvider.notifier).addPokemonToParty(pokemon.id);
-    
+
     // スナックバーで成功メッセージを表示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -336,7 +344,9 @@ class _PokemonListItem extends ConsumerWidget {
         action: SnackBarAction(
           label: '取り消し',
           onPressed: () {
-            ref.read(currentPartyStateProvider.notifier).removePokemonFromParty(pokemon.id);
+            ref
+                .read(currentPartyStateProvider.notifier)
+                .removePokemonFromParty(pokemon.id);
           },
         ),
       ),

@@ -7,7 +7,7 @@ part 'pokemon_dto.g.dart';
 @freezed
 abstract class PokemonDto with _$PokemonDto {
   const PokemonDto._(); // Add private constructor
-  
+
   const factory PokemonDto({
     required String name,
     required String url,
