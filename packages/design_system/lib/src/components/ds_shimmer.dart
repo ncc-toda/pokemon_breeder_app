@@ -41,7 +41,8 @@ class DsShimmer extends StatelessWidget {
       baseColor: baseColor ??
           (isDark
               ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
-              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
+              : theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.1)),
       highlightColor: highlightColor ??
           (isDark
               ? theme.colorScheme.surface.withValues(alpha: 0.5)
@@ -128,10 +129,10 @@ class DsLoadingShimmer extends StatelessWidget {
 
   /// Shimmerの幅
   final double width;
-  
+
   /// Shimmerの高さ
   final double height;
-  
+
   /// Shimmerの角丸設定
   final BorderRadius? borderRadius;
 

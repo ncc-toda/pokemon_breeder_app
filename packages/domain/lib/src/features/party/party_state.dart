@@ -73,7 +73,7 @@ class CurrentPartyState extends _$CurrentPartyState {
     try {
       final partyService = ref.read(partyServiceProvider);
       final parties = await partyService.getAllParties();
-      
+
       if (parties.isNotEmpty) {
         state = AsyncValue.data(parties.first);
       } else {
@@ -144,12 +144,12 @@ class CurrentPartyState extends _$CurrentPartyState {
     try {
       final database = ref.read(localDatabaseProvider);
       final partyPokemons = await database.getPartyPokemons(currentParty.id);
-      
+
       final slots = <PartySlot>[];
-      
+
       // パーティポケモンをposition順にソート
       partyPokemons.sort((a, b) => a.position.compareTo(b.position));
-      
+
       // 埋まっているスロット
       for (final partyPokemon in partyPokemons) {
         slots.add(PartySlot.filled(
@@ -159,12 +159,12 @@ class CurrentPartyState extends _$CurrentPartyState {
           breedingCounter: partyPokemon.breedingCounter,
         ));
       }
-      
+
       // 空のスロット
       for (int i = partyPokemons.length; i < 6; i++) {
         slots.add(PartySlot.empty(position: i));
       }
-      
+
       return slots;
     } catch (error) {
       debugPrint('Failed to get party slots: $error');
@@ -179,7 +179,7 @@ class CurrentPartyState extends _$CurrentPartyState {
       final partyPokemon = await (database.select(database.partyPokemons)
             ..where((tbl) => tbl.id.equals(partyPokemonId)))
           .getSingleOrNull();
-      
+
       if (partyPokemon != null) {
         await database.updateBreedingCounter(
           partyPokemonId,
@@ -198,7 +198,7 @@ class CurrentPartyState extends _$CurrentPartyState {
       final partyPokemon = await (database.select(database.partyPokemons)
             ..where((tbl) => tbl.id.equals(partyPokemonId)))
           .getSingleOrNull();
-      
+
       if (partyPokemon != null && partyPokemon.breedingCounter > 0) {
         await database.updateBreedingCounter(
           partyPokemonId,
@@ -224,7 +224,8 @@ class CurrentPartyState extends _$CurrentPartyState {
   Future<void> setBreedingCounter(int partyPokemonId, int value) async {
     try {
       final database = ref.read(localDatabaseProvider);
-      await database.updateBreedingCounter(partyPokemonId, value < 0 ? 0 : value);
+      await database.updateBreedingCounter(
+          partyPokemonId, value < 0 ? 0 : value);
     } catch (error, _) {
       debugPrint('Failed to set breeding counter: $error');
     }

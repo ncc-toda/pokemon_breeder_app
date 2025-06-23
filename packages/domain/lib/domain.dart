@@ -8,6 +8,8 @@ export 'src/core/core.dart';
 // Features
 export 'src/features/pokemon/pokemon.dart';
 export 'src/features/pokemon/pokemon_state.dart';
+export 'src/features/pokemon/evolution_data.dart';
+export 'src/features/pokemon/evolve_pokemon_use_case.dart';
 export 'src/features/party/party.dart';
 export 'src/features/party/party_pokemon.dart';
 export 'src/features/party/party_state.dart';

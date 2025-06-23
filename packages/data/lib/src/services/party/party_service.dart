@@ -32,25 +32,26 @@ class PartyService {
       name: name,
       pokemonIds: const [],
     );
-    
+
     final id = await _database.insertParty(companion);
     final parties = await _database.getAllParties();
     final createdParty = parties.where((p) => p.id == id).first;
-    
+
     return _convertToEntity(createdParty);
   }
 
   /// パーティを更新する。
   Future<void> updateParty(domain.Party party) async {
-    final dbParty = await _database.getAllParties()
+    final dbParty = await _database
+        .getAllParties()
         .then((parties) => parties.where((p) => p.id == party.id).first);
-    
+
     final updatedParty = dbParty.copyWith(
       name: party.name,
       pokemonIds: party.pokemonIds.map((id) => id.toString()).toList(),
       updatedAt: party.updatedAt,
     );
-    
+
     await _database.updateParty(updatedParty);
   }
 

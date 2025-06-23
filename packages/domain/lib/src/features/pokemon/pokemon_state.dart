@@ -27,7 +27,7 @@ class PokemonState extends _$PokemonState {
   Future<void> fetchNextPage() async {
     final currentList = state.valueOrNull ?? [];
     if (currentList.isEmpty) return;
-    
+
     await _fetchPokemons(offset: currentList.length, isInitial: false);
   }
 
@@ -38,7 +38,7 @@ class PokemonState extends _$PokemonState {
   }) async {
     try {
       final pokemonService = ref.read(pokemonServiceProvider);
-      
+
       final result = await pokemonService.fetchPokemons(
         limit: _pageSize,
         offset: offset,
@@ -47,7 +47,8 @@ class PokemonState extends _$PokemonState {
       await result.when(
         success: (pokemonDtos) async {
           final newPokemons = pokemonDtos.map(_convertToEntity).toList();
-          final currentList = isInitial ? <Pokemon>[] : (state.valueOrNull ?? []);
+          final currentList =
+              isInitial ? <Pokemon>[] : (state.valueOrNull ?? []);
           state = AsyncValue.data([...currentList, ...newPokemons]);
         },
         failure: (failure) async {
@@ -59,7 +60,8 @@ class PokemonState extends _$PokemonState {
           } else {
             // 無限スクロール中のエラーは現在の状態を保持
             // エラー情報はログに出力のみ
-            debugPrint('Additional pokemon fetch failed: ${failure.toString()}');
+            debugPrint(
+                'Additional pokemon fetch failed: ${failure.toString()}');
           }
         },
       );
@@ -83,10 +85,11 @@ class PokemonState extends _$PokemonState {
     final urlParts = pokemonDto.url.split('/');
     final idString = urlParts[urlParts.length - 2]; // 最後の '/' を除いた要素
     final id = int.tryParse(idString) ?? 0;
-    
+
     // スプライト画像URLを生成
-    final imageUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png';
-    
+    final imageUrl =
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png';
+
     return Pokemon(
       id: id,
       name: pokemonDto.name,

@@ -43,9 +43,13 @@ analyze:
 	cd packages/data && fvm flutter analyze .
 	cd packages/domain && fvm flutter analyze .
 
-.PHONY: format
-format:
-	dart format .
+.PHONY: format_all
+format_all:
+	fvm dart format .
+
+.PHONY: fix_all
+fix_all:
+	fvm dart fix --apply
 
 # * コード生成
 .PHONY: generate_app

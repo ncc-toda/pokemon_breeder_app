@@ -42,8 +42,8 @@ class PartyPokemons extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {partyId, position}, // パーティ内での位置は一意
-  ];
+        {partyId, position}, // パーティ内での位置は一意
+      ];
 }
 
 class _StringListConverter extends TypeConverter<List<String>, String> {
@@ -68,24 +68,24 @@ class LocalDatabase extends _$LocalDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) async {
-      await m.createAll();
-    },
-    onUpgrade: (Migrator m, int from, int to) async {
-      if (from < 2) {
-        // v1 -> v2: PartyPokemonsテーブルを追加
-        await m.createTable(partyPokemons);
-        
-        // 既存のパーティデータをPartyPokemonsテーブルに移行
-        await _migratePartyData();
-      }
-    },
-  );
+        onCreate: (Migrator m) async {
+          await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            // v1 -> v2: PartyPokemonsテーブルを追加
+            await m.createTable(partyPokemons);
+
+            // 既存のパーティデータをPartyPokemonsテーブルに移行
+            await _migratePartyData();
+          }
+        },
+      );
 
   /// 既存のパーティデータをPartyPokemonsテーブルに移行する。
   Future<void> _migratePartyData() async {
     final existingParties = await select(parties).get();
-    
+
     for (final party in existingParties) {
       final pokemonIds = party.pokemonIds;
       for (int i = 0; i < pokemonIds.length && i < 6; i++) {
@@ -115,8 +115,10 @@ class LocalDatabase extends _$LocalDatabase {
 
   // PartyPokemons CRUD methods -----------------------------------------------
   Future<List<PartyPokemon>> getPartyPokemons(int partyId) =>
-      (select(partyPokemons)..where((tbl) => tbl.partyId.equals(partyId))
-        ..orderBy([(tbl) => OrderingTerm.asc(tbl.position)])).get();
+      (select(partyPokemons)
+            ..where((tbl) => tbl.partyId.equals(partyId))
+            ..orderBy([(tbl) => OrderingTerm.asc(tbl.position)]))
+          .get();
 
   Future<int> insertPartyPokemon(PartyPokemonsCompanion companion) =>
       into(partyPokemons).insert(companion);
