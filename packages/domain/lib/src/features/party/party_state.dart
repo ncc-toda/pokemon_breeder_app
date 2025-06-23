@@ -1,3 +1,4 @@
+import 'package:data/src/services/local_storage/local_database_provider.dart';
 import 'package:data/src/services/party/party_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -133,29 +134,100 @@ class CurrentPartyState extends _$CurrentPartyState {
     }
   }
 
-  /// パーティの6スロット情報を取得する。
-  List<PartySlot> getPartySlots() {
+  /// パーティの6スロット情報を取得する（育成カウンター情報を含む）。
+  Future<List<PartySlot>> getPartySlots() async {
     final currentParty = state.valueOrNull;
     if (currentParty == null) {
       return List.generate(6, (index) => PartySlot.empty(position: index));
     }
 
-    final slots = <PartySlot>[];
-    
-    // 埋まっているスロット
-    for (int i = 0; i < currentParty.pokemonIds.length; i++) {
-      slots.add(PartySlot.filled(
-        pokemonId: currentParty.pokemonIds[i],
-        position: i,
-      ));
+    try {
+      final database = ref.read(localDatabaseProvider);
+      final partyPokemons = await database.getPartyPokemons(currentParty.id);
+      
+      final slots = <PartySlot>[];
+      
+      // パーティポケモンをposition順にソート
+      partyPokemons.sort((a, b) => a.position.compareTo(b.position));
+      
+      // 埋まっているスロット
+      for (final partyPokemon in partyPokemons) {
+        slots.add(PartySlot.filled(
+          partyPokemonId: partyPokemon.id,
+          pokemonId: partyPokemon.pokemonId,
+          position: partyPokemon.position,
+          breedingCounter: partyPokemon.breedingCounter,
+        ));
+      }
+      
+      // 空のスロット
+      for (int i = partyPokemons.length; i < 6; i++) {
+        slots.add(PartySlot.empty(position: i));
+      }
+      
+      return slots;
+    } catch (error) {
+      debugPrint('Failed to get party slots: $error');
+      return List.generate(6, (index) => PartySlot.empty(position: index));
     }
-    
-    // 空のスロット
-    for (int i = currentParty.pokemonIds.length; i < 6; i++) {
-      slots.add(PartySlot.empty(position: i));
+  }
+
+  /// 育成カウンターを増加させる。
+  Future<void> incrementBreedingCounter(int partyPokemonId) async {
+    try {
+      final database = ref.read(localDatabaseProvider);
+      final partyPokemon = await (database.select(database.partyPokemons)
+            ..where((tbl) => tbl.id.equals(partyPokemonId)))
+          .getSingleOrNull();
+      
+      if (partyPokemon != null) {
+        await database.updateBreedingCounter(
+          partyPokemonId,
+          partyPokemon.breedingCounter + 1,
+        );
+      }
+    } catch (error, _) {
+      debugPrint('Failed to increment breeding counter: $error');
     }
-    
-    return slots;
+  }
+
+  /// 育成カウンターを減少させる。
+  Future<void> decrementBreedingCounter(int partyPokemonId) async {
+    try {
+      final database = ref.read(localDatabaseProvider);
+      final partyPokemon = await (database.select(database.partyPokemons)
+            ..where((tbl) => tbl.id.equals(partyPokemonId)))
+          .getSingleOrNull();
+      
+      if (partyPokemon != null && partyPokemon.breedingCounter > 0) {
+        await database.updateBreedingCounter(
+          partyPokemonId,
+          partyPokemon.breedingCounter - 1,
+        );
+      }
+    } catch (error, _) {
+      debugPrint('Failed to decrement breeding counter: $error');
+    }
+  }
+
+  /// 育成カウンターをリセットする。
+  Future<void> resetBreedingCounter(int partyPokemonId) async {
+    try {
+      final database = ref.read(localDatabaseProvider);
+      await database.updateBreedingCounter(partyPokemonId, 0);
+    } catch (error, _) {
+      debugPrint('Failed to reset breeding counter: $error');
+    }
+  }
+
+  /// 育成カウンターを指定値に設定する。
+  Future<void> setBreedingCounter(int partyPokemonId, int value) async {
+    try {
+      final database = ref.read(localDatabaseProvider);
+      await database.updateBreedingCounter(partyPokemonId, value < 0 ? 0 : value);
+    } catch (error, _) {
+      debugPrint('Failed to set breeding counter: $error');
+    }
   }
 
   /// 現在のパーティを再読み込みする。
