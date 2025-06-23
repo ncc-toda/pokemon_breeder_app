@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'party.dart';
-import 'party_pokemon.dart';
 
 part 'party_state.g.dart';
 
@@ -177,7 +176,7 @@ class CurrentPartyState extends _$CurrentPartyState {
   Future<void> incrementBreedingCounter(int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
-      final partyPokemon = (await database.select(database.partyPokemons)
+      final partyPokemon = await (database.select(database.partyPokemons)
             ..where((tbl) => tbl.id.equals(partyPokemonId)))
           .getSingleOrNull();
       
@@ -187,7 +186,7 @@ class CurrentPartyState extends _$CurrentPartyState {
           partyPokemon.breedingCounter + 1,
         );
       }
-    } catch (error, stackTrace) {
+    } catch (error, _) {
       debugPrint('Failed to increment breeding counter: $error');
     }
   }
@@ -196,7 +195,7 @@ class CurrentPartyState extends _$CurrentPartyState {
   Future<void> decrementBreedingCounter(int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
-      final partyPokemon = (await database.select(database.partyPokemons)
+      final partyPokemon = await (database.select(database.partyPokemons)
             ..where((tbl) => tbl.id.equals(partyPokemonId)))
           .getSingleOrNull();
       
@@ -206,7 +205,7 @@ class CurrentPartyState extends _$CurrentPartyState {
           partyPokemon.breedingCounter - 1,
         );
       }
-    } catch (error, stackTrace) {
+    } catch (error, _) {
       debugPrint('Failed to decrement breeding counter: $error');
     }
   }
@@ -216,7 +215,7 @@ class CurrentPartyState extends _$CurrentPartyState {
     try {
       final database = ref.read(localDatabaseProvider);
       await database.updateBreedingCounter(partyPokemonId, 0);
-    } catch (error, stackTrace) {
+    } catch (error, _) {
       debugPrint('Failed to reset breeding counter: $error');
     }
   }
@@ -226,7 +225,7 @@ class CurrentPartyState extends _$CurrentPartyState {
     try {
       final database = ref.read(localDatabaseProvider);
       await database.updateBreedingCounter(partyPokemonId, value < 0 ? 0 : value);
-    } catch (error, stackTrace) {
+    } catch (error, _) {
       debugPrint('Failed to set breeding counter: $error');
     }
   }

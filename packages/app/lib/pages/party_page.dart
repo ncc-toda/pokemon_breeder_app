@@ -62,25 +62,25 @@ class PartyPage extends HookConsumerWidget {
                         itemBuilder: (context, index) {
                           if (index < partySlots.length) {
                             final slot = partySlots[index];
-                            return slot.when(
-                              filled: (partyPokemonId, pokemonId, position, breedingCounter) {
-                                final pokemon = allPokemons.where((p) => p.id == pokemonId).firstOrNull;
-                                return _PokemonCard(
-                                  pokemon: pokemon,
-                                  partyPokemonId: partyPokemonId,
-                                  breedingCounter: breedingCounter,
-                                  canEvolve: slot.canEvolve,
-                                  progressPercentage: slot.progressPercentage,
-                                  onTap: pokemon != null ? () => _showPokemonOptions(context, ref, pokemon) : null,
-                                  onLongPress: pokemon != null ? () => _showDeleteDialog(context, ref, pokemon) : null,
-                                  onIncrementCounter: () => _incrementCounter(ref, partyPokemonId),
-                                  onDecrementCounter: () => _decrementCounter(ref, partyPokemonId),
-                                );
-                              },
-                              empty: (position) => _EmptySlotCard(
+                            if (slot.runtimeType.toString().contains('Filled')) {
+                              final filled = slot as dynamic;
+                              final pokemon = allPokemons.where((p) => p.id == filled.pokemonId).firstOrNull;
+                              return _PokemonCard(
+                                pokemon: pokemon,
+                                partyPokemonId: filled.partyPokemonId,
+                                breedingCounter: filled.breedingCounter,
+                                canEvolve: slot.canEvolve,
+                                progressPercentage: slot.progressPercentage,
+                                onTap: pokemon != null ? () => _showPokemonOptions(context, ref, pokemon) : null,
+                                onLongPress: pokemon != null ? () => _showDeleteDialog(context, ref, pokemon) : null,
+                                onIncrementCounter: () => _incrementCounter(ref, filled.partyPokemonId),
+                                onDecrementCounter: () => _decrementCounter(ref, filled.partyPokemonId),
+                              );
+                            } else {
+                              return _EmptySlotCard(
                                 onTap: () => context.go('/pokedex'),
-                              ),
-                            );
+                              );
+                            }
                           } else {
                             return _EmptySlotCard(
                               onTap: () => context.go('/pokedex'),
