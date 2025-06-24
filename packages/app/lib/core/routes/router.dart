@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pokemon_breeder_app/pages/party_page.dart';
+import 'package:pokemon_breeder_app/ui/pages/party_page.dart';
 // Pages
-import 'package:pokemon_breeder_app/pages/pokedex_page.dart';
-import 'package:pokemon_breeder_app/pages/evolution_confirmation_page.dart';
-import 'package:pokemon_breeder_app/pages/evolution_result_page.dart';
+import 'package:pokemon_breeder_app/ui/pages/pokedex_page.dart';
+import 'package:pokemon_breeder_app/ui/pages/evolution_confirmation_page.dart';
+import 'package:pokemon_breeder_app/ui/pages/evolution_result_page.dart';
 
 /// アプリ全体で使用する [GoRouter] インスタンス。
 ///

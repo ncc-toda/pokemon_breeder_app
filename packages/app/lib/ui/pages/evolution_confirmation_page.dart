@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:domain/domain.dart';
-import 'package:pokemon_breeder_app/widgets/pokemon_info_view.dart';
+import 'package:pokemon_breeder_app/ui/features/pokemon/components/pokemon_info_view.dart';
 
 /// 進化確認画面のパラメータ。
 class EvolutionConfirmationParams {
