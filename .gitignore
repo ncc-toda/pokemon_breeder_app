@@ -33,6 +33,13 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Flutter build cache and artifacts
+**/build/
+**/*.cache.dill.track.dill
+**/build/native_assets/
+**/build/test_cache/
+**/build/unit_test_assets/
+
 # Symbolication related
 app.*.symbols
 
