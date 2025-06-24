@@ -100,7 +100,7 @@ class PokedexPage extends HookConsumerWidget {
             ),
 
           // フィルターバー
-          _buildFilterBar(),
+          const _PokemonFilterBar(),
 
           // ポケモンリスト
           Expanded(
@@ -111,16 +111,17 @@ class PokedexPage extends HookConsumerWidget {
                   return DsSearchEmptyState(query: searchQuery);
                 }
 
-                return _buildPokemonList(
-                  pokemons:
-                      searchQuery.isNotEmpty ? filteredPokemons : pokemons,
-                  scrollController: scrollController,
-                  isLoadingMore: isLoadingMore.value,
-                  showLoadingMore: searchQuery.isEmpty, // 検索中は追加読み込み表示しない
+                return _PokemonListView(
+                  config: PokemonListViewConfig(
+                    pokemons: searchQuery.isNotEmpty ? filteredPokemons : pokemons,
+                    scrollController: scrollController,
+                    isLoadingMore: isLoadingMore.value,
+                    showLoadingMore: searchQuery.isEmpty, // 検索中は追加読み込み表示しない
+                  ),
                 );
               },
-              loading: () => _buildShimmerList(),
-              error: (error, stackTrace) => _buildErrorView(
+              loading: () => const _PokemonListShimmer(),
+              error: (error, stackTrace) => _PokemonListErrorView(
                 error: error,
                 onRetry: () => pokemonState.retry(),
               ),
@@ -131,7 +132,33 @@ class PokedexPage extends HookConsumerWidget {
     );
   }
 
-  Widget _buildFilterBar() {
+
+
+
+}
+
+/// Shimmerローディング表示用のWidgetクラス
+class _PokemonListShimmer extends StatelessWidget {
+  const _PokemonListShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: DsPadding.allS,
+      itemCount: 10, // 初期表示用のShimmerアイテム数
+      itemBuilder: (context, index) {
+        return const DsPokemonListShimmer();
+      },
+    );
+  }
+}
+
+/// フィルターバー表示用のWidgetクラス
+class _PokemonFilterBar extends StatelessWidget {
+  const _PokemonFilterBar();
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: DsPadding.allS,
       child: Wrap(
@@ -163,25 +190,109 @@ class PokedexPage extends HookConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildPokemonList({
-    required List<Pokemon> pokemons,
-    required ScrollController scrollController,
-    required bool isLoadingMore,
-    required bool showLoadingMore,
-  }) {
-    if (pokemons.isEmpty) {
+/// エラー表示用のWidgetクラス
+class _PokemonListErrorView extends StatelessWidget {
+  const _PokemonListErrorView({
+    required this.error,
+    required this.onRetry,
+  });
+
+  /// 表示するエラー
+  final Object error;
+
+  /// 再試行ボタンタップ時のコールバック
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: DsPadding.allM,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: DsSpacing.m),
+            Text(
+              'データの読み込みに失敗しました',
+              style: DsTypography.titleMedium.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DsSpacing.s),
+            Text(
+              error.toString().replaceFirst('Exception: ', ''),
+              style: DsTypography.bodySmall.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DsSpacing.l),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('再試行'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ポケモンリスト表示の設定を保持するクラス
+class PokemonListViewConfig {
+  const PokemonListViewConfig({
+    required this.pokemons,
+    required this.scrollController,
+    required this.isLoadingMore,
+    required this.showLoadingMore,
+  });
+
+  /// 表示するポケモンのリスト
+  final List<Pokemon> pokemons;
+
+  /// スクロール制御用のコントローラー
+  final ScrollController scrollController;
+
+  /// 追加読み込み中かどうか
+  final bool isLoadingMore;
+
+  /// 追加読み込みインジケーターを表示するかどうか
+  final bool showLoadingMore;
+}
+
+/// ポケモンリスト表示用のWidgetクラス
+class _PokemonListView extends StatelessWidget {
+  const _PokemonListView({
+    required this.config,
+  });
+
+  /// リスト表示の設定
+  final PokemonListViewConfig config;
+
+  @override
+  Widget build(BuildContext context) {
+    if (config.pokemons.isEmpty) {
       return const Center(
         child: Text('ポケモンが見つかりませんでした'),
       );
     }
 
     return ListView.builder(
-      controller: scrollController,
+      controller: config.scrollController,
       padding: DsPadding.allS,
-      itemCount: pokemons.length + (isLoadingMore && showLoadingMore ? 1 : 0),
+      itemCount: config.pokemons.length + 
+          (config.isLoadingMore && config.showLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index >= pokemons.length) {
+        if (index >= config.pokemons.length) {
           // ローディングインジケーター
           return const Padding(
             padding: DsPadding.allM,
@@ -189,66 +300,9 @@ class PokedexPage extends HookConsumerWidget {
           );
         }
 
-        final pokemon = pokemons[index];
+        final pokemon = config.pokemons[index];
         return _PokemonListItem(pokemon: pokemon);
       },
-    );
-  }
-
-  /// Shimmerローディング表示を構築する。
-  Widget _buildShimmerList() {
-    return ListView.builder(
-      padding: DsPadding.allS,
-      itemCount: 10, // 初期表示用のShimmerアイテム数
-      itemBuilder: (context, index) {
-        return const DsPokemonListShimmer();
-      },
-    );
-  }
-
-  /// エラー表示を構築する。
-  Widget _buildErrorView({
-    required Object error,
-    required VoidCallback onRetry,
-  }) {
-    return Builder(
-      builder: (context) => Center(
-        child: Padding(
-          padding: DsPadding.allM,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: DsSpacing.m),
-              Text(
-                'データの読み込みに失敗しました',
-                style: DsTypography.titleMedium.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: DsSpacing.s),
-              Text(
-                error.toString().replaceFirst('Exception: ', ''),
-                style: DsTypography.bodySmall.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: DsSpacing.l),
-              ElevatedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('再試行'),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
