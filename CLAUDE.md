@@ -59,6 +59,13 @@ This is a multi-package Flutter monorepo following Clean Architecture principles
 - **Comments**: Japanese language, document public APIs with `///`
 - **Code Generation**: Commit generated `.g.dart` and `.freezed.dart` files
 
+### Widget Development Rules
+- **buildXX Methods Prohibited**: Use Widget inheritance instead of buildXX helper methods
+- **Component Separation**: Extract complex UI logic (50+ lines) into separate Widget classes
+- **Private Widget Naming**: Use underscore prefix for page-specific components (e.g., `_PokemonListView`)
+- **Parameter Objects**: Use configuration classes for complex parameter passing
+- **Testability**: Prefer dependency injection via constructors over context access
+
 ### Current Implementation Status
 - ✅ Bottom navigation with Pokedex and Party pages
 - ✅ Design system with consistent styling and Shimmer components
