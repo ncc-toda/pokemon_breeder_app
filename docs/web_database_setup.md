@@ -44,6 +44,22 @@ Web環境で「Could not access the sql.js javascript library」エラーが発�
 - index.htmlにsql.jsライブラリが含まれているか確認
 - CDNからライブラリが正常に読み込まれているか確認
 
+#### WebAssemblyエラー
+Web環境で「WebAssembly.instantiate(): expected magic word 00 61 73 6d, found 3c 21 44 4f」エラーが発生する場合：
+- WASMファイルの代わりにHTMLが読み込まれている問題
+- `initSqlJs`の`locateFile`関数で正しいWASMファイルパスを指定する必要がある
+- 正しい設定例：
+```javascript
+initSqlJs({
+  locateFile: function(file) {
+    if (file === 'sql-wasm.wasm') {
+      return 'https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.wasm';
+    }
+    return file;
+  }
+})
+```
+
 ### データベースの動作確認方法
 
 #### ネイティブ環境
