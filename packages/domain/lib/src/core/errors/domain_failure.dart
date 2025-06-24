@@ -4,7 +4,7 @@ part 'domain_failure.freezed.dart';
 
 /// Domain層で発生するエラーを表すFailure型。
 @freezed
-class DomainFailure with _$DomainFailure {
+sealed class DomainFailure with _$DomainFailure {
   /// データ取得に失敗した場合のエラー。
   const factory DomainFailure.dataFetchFailed({
     required String message,
@@ -65,3 +65,4 @@ class DomainFailure with _$DomainFailure {
     Object? cause,
   }) = _Unexpected;
 }
+
