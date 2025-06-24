@@ -405,8 +405,10 @@ class _PokemonListItem extends ConsumerWidget {
 
   /// ポケモンをパーティに追加する。
   void _addToParty(BuildContext context, WidgetRef ref, Pokemon pokemon) async {
-    final result = await ref.read(currentPartyStateProvider.notifier).addPokemonToParty(pokemon.id);
-    
+    final result = await ref
+        .read(currentPartyStateProvider.notifier)
+        .addPokemonToParty(pokemon.id);
+
     result.when(
       success: (updatedParty) {
         // スナックバーで成功メッセージを表示

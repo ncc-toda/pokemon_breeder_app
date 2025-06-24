@@ -109,9 +109,10 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
                 content: Text(failure.message),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
-          );
-        }
-      }
+            );
+          }
+        },
+      );
     } catch (error) {
       // ローディングを閉じる
       if (context.mounted) {

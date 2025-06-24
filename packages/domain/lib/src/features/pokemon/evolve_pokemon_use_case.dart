@@ -41,7 +41,8 @@ class EvolvePokemonUseCase extends _$EvolvePokemonUseCase {
   ///
   /// [partyPokemonId] 進化させるパーティポケモンのID
   /// 戻り値: 進化処理の結果
-  Future<Result<EvolutionData, DomainFailure>> evolve(int partyPokemonId) async {
+  Future<Result<EvolutionData, DomainFailure>> evolve(
+      int partyPokemonId) async {
     try {
       debugPrint(
           'EvolvePokemonUseCase.evolve: Starting evolution for partyPokemonId=$partyPokemonId');
@@ -120,7 +121,8 @@ class EvolvePokemonUseCase extends _$EvolvePokemonUseCase {
   ///
   /// [partyPokemonId] 退化させるパーティポケモンのID
   /// 戻り値: 退化処理の結果
-  Future<Result<EvolutionData, DomainFailure>> devolve(int partyPokemonId) async {
+  Future<Result<EvolutionData, DomainFailure>> devolve(
+      int partyPokemonId) async {
     try {
       debugPrint(
           'EvolvePokemonUseCase.devolve: Starting devolution for partyPokemonId=$partyPokemonId');

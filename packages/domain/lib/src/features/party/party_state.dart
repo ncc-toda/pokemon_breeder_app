@@ -202,13 +202,13 @@ class CurrentPartyState extends _$CurrentPartyState {
     try {
       final partyService = ref.read(partyServiceProvider);
       final database = ref.read(localDatabaseProvider);
-      
+
       final updatedParty = currentParty.addPokemon(pokemonId);
       await partyService.updateParty(updatedParty);
-      
+
       // partyPokemonsテーブルにも同期
       final position = updatedParty.pokemonIds.length - 1; // 最後に追加された位置
-      
+
       await database.insertPartyPokemon(
         db.PartyPokemonsCompanion.insert(
           partyId: currentParty.id,
@@ -217,7 +217,7 @@ class CurrentPartyState extends _$CurrentPartyState {
           breedingCounter: const Value(0),
         ),
       );
-      
+
       state = AsyncValue.data(updatedParty);
       return Success(updatedParty);
     } catch (error, stackTrace) {
@@ -232,7 +232,8 @@ class CurrentPartyState extends _$CurrentPartyState {
   }
 
   /// パーティからポケモンを削除する。
-  Future<Result<Party, DomainFailure>> removePokemonFromParty(int pokemonId) async {
+  Future<Result<Party, DomainFailure>> removePokemonFromParty(
+      int pokemonId) async {
     final currentParty = state.valueOrNull;
     if (currentParty == null) {
       final failure = DomainFailure.notFound(
@@ -244,19 +245,21 @@ class CurrentPartyState extends _$CurrentPartyState {
     try {
       final partyService = ref.read(partyServiceProvider);
       final database = ref.read(localDatabaseProvider);
-      
+
       final updatedParty = currentParty.removePokemon(pokemonId);
       await partyService.updateParty(updatedParty);
-      
+
       // partyPokemonsテーブルからも削除
       final partyPokemon = await (database.select(database.partyPokemons)
-        ..where((tbl) => tbl.partyId.equals(currentParty.id) & tbl.pokemonId.equals(pokemonId)))
-        .getSingleOrNull();
-      
+            ..where((tbl) =>
+                tbl.partyId.equals(currentParty.id) &
+                tbl.pokemonId.equals(pokemonId)))
+          .getSingleOrNull();
+
       if (partyPokemon != null) {
         await database.deletePartyPokemon(partyPokemon.id);
       }
-      
+
       state = AsyncValue.data(updatedParty);
       return Success(updatedParty);
     } catch (error, stackTrace) {
@@ -316,7 +319,8 @@ class CurrentPartyState extends _$CurrentPartyState {
   }
 
   /// 育成カウンターを増加させる。
-  Future<Result<void, DomainFailure>> incrementBreedingCounter(int partyPokemonId) async {
+  Future<Result<void, DomainFailure>> incrementBreedingCounter(
+      int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
       final partyPokemon = await (database.select(database.partyPokemons)
@@ -346,7 +350,8 @@ class CurrentPartyState extends _$CurrentPartyState {
   }
 
   /// 育成カウンターを減少させる。
-  Future<Result<void, DomainFailure>> decrementBreedingCounter(int partyPokemonId) async {
+  Future<Result<void, DomainFailure>> decrementBreedingCounter(
+      int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
       final partyPokemon = await (database.select(database.partyPokemons)
@@ -381,7 +386,8 @@ class CurrentPartyState extends _$CurrentPartyState {
   }
 
   /// 育成カウンターをリセットする。
-  Future<Result<void, DomainFailure>> resetBreedingCounter(int partyPokemonId) async {
+  Future<Result<void, DomainFailure>> resetBreedingCounter(
+      int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
       await database.updateBreedingCounter(partyPokemonId, 0);
@@ -397,7 +403,8 @@ class CurrentPartyState extends _$CurrentPartyState {
   }
 
   /// 育成カウンターを指定値に設定する。
-  Future<Result<void, DomainFailure>> setBreedingCounter(int partyPokemonId, int value) async {
+  Future<Result<void, DomainFailure>> setBreedingCounter(
+      int partyPokemonId, int value) async {
     if (value < 0) {
       final failure = DomainFailure.validationError(
         message: '育成カウンターには0以上の値を設定してください',

@@ -25,7 +25,8 @@ class _GoRouterEvolutionNavigationService
     result.when(
       success: (_) => {},
       failure: (failure) {
-        debugPrint('Failed to reload party after evolution: ${failure.message}');
+        debugPrint(
+            'Failed to reload party after evolution: ${failure.message}');
       },
     );
 

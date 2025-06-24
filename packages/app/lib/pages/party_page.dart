@@ -36,7 +36,8 @@ class PartyPage extends HookConsumerWidget {
                           result.when(
                             success: (_) => {},
                             failure: (failure) {
-                              debugPrint('Failed to reload party: ${failure.message}');
+                              debugPrint(
+                                  'Failed to reload party: ${failure.message}');
                             },
                           );
                         },
@@ -62,12 +63,14 @@ class PartyPage extends HookConsumerWidget {
                       }
 
                       final partySlots = snapshot.data?.when(
-                        success: (slots) => slots,
-                        failure: (failure) {
-                          debugPrint('Failed to get party slots: ${failure.message}');
-                          return <PartySlot>[];
-                        },
-                      ) ?? [];
+                            success: (slots) => slots,
+                            failure: (failure) {
+                              debugPrint(
+                                  'Failed to get party slots: ${failure.message}');
+                              return <PartySlot>[];
+                            },
+                          ) ??
+                          [];
 
                       return GridView.builder(
                         padding: DsPadding.allS,
@@ -224,7 +227,7 @@ class PartyPage extends HookConsumerWidget {
   void _startEvolution(BuildContext context, WidgetRef ref, Pokemon pokemon,
       int partyPokemonId) {
     // 進化先のポケモンIDを取得
-    final evolutionTargetId = EvolutionData.getEvolutionTarget(pokemon.id);
+    final evolutionTargetId = EvolutionDataHelper.getEvolutionTarget(pokemon.id);
     if (evolutionTargetId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -297,7 +300,8 @@ class PartyPage extends HookConsumerWidget {
                             addResult.when(
                               success: (_) => {},
                               failure: (failure) {
-                                debugPrint('Failed to re-add pokemon: ${failure.message}');
+                                debugPrint(
+                                    'Failed to re-add pokemon: ${failure.message}');
                               },
                             );
                           },

@@ -20,9 +20,11 @@ class PartyService {
     try {
       developer.log('Getting all parties from database', name: 'PartyService');
       final parties = await _database.getAllParties();
-      developer.log('Retrieved ${parties.length} parties from database', name: 'PartyService');
+      developer.log('Retrieved ${parties.length} parties from database',
+          name: 'PartyService');
       final domainParties = parties.map(_convertToEntity).toList();
-      developer.log('Converted to ${domainParties.length} domain parties', name: 'PartyService');
+      developer.log('Converted to ${domainParties.length} domain parties',
+          name: 'PartyService');
       return domainParties;
     } catch (error, stackTrace) {
       developer.log(
@@ -53,12 +55,13 @@ class PartyService {
 
       final id = await _database.insertParty(companion);
       developer.log('Party created with ID: $id', name: 'PartyService');
-      
+
       final parties = await _database.getAllParties();
       final createdParty = parties.where((p) => p.id == id).first;
-      
+
       final domainParty = _convertToEntity(createdParty);
-      developer.log('Party converted to domain entity: ${domainParty.name}', name: 'PartyService');
+      developer.log('Party converted to domain entity: ${domainParty.name}',
+          name: 'PartyService');
       return domainParty;
     } catch (error, stackTrace) {
       developer.log(
