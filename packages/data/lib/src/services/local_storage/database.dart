@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 
 import 'database_connection.dart'
     if (dart.library.html) 'database_connection_web.dart'
@@ -60,7 +61,10 @@ class _StringListConverter extends TypeConverter<List<String>, String> {
 
 @DriftDatabase(tables: [Parties, PartyPokemons])
 class LocalDatabase extends _$LocalDatabase {
-  LocalDatabase() : super(createDatabaseConnection());
+  LocalDatabase() : super(createDatabaseConnection()) {
+    // 複数データベースインスタンス警告を無効化
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  }
 
   @override
   int get schemaVersion => 2;

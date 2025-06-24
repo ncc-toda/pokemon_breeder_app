@@ -3,9 +3,18 @@ import 'dart:developer' as developer;
 import 'package:drift/drift.dart';
 import 'package:drift/web.dart';
 
+/// グローバルなQueryExecutorインスタンス
+QueryExecutor? _globalExecutor;
+
 /// Web環境でのデータベース接続を作成する
 QueryExecutor createDatabaseConnection() {
-  return LazyDatabase(() async {
+  if (_globalExecutor != null) {
+    developer.log('Returning existing global QueryExecutor', name: 'DatabaseConnection');
+    return _globalExecutor!;
+  }
+
+  developer.log('Creating new global QueryExecutor', name: 'DatabaseConnection');
+  _globalExecutor = LazyDatabase(() async {
     try {
       developer.log('Creating WebDatabase for pokemon_breeder_db', name: 'DatabaseConnection');
       final database = WebDatabase.withStorage(
@@ -25,4 +34,6 @@ QueryExecutor createDatabaseConnection() {
       return WebDatabase('pokemon_breeder_db_fallback');
     }
   });
+  
+  return _globalExecutor!;
 }

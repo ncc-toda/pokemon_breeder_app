@@ -6,12 +6,13 @@ part of 'local_database_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$localDatabaseHash() => r'596a2583da45eb8d68e9e976ba0dd8fea818ca15';
+String _$localDatabaseHash() => r'2158c66e249c11fc6c39ed475accb283454072b4';
 
 /// LocalDatabase のインスタンスを提供する Provider。
 ///
 /// Generator により `localDatabaseProvider` が生成される。
 /// keepAlive により、プロバイダーが頻繁に破棄されることを防ぐ。
+/// グローバル単一インスタンスを使用して複数インスタンス作成を防ぐ。
 ///
 /// Copied from [localDatabase].
 @ProviderFor(localDatabase)
