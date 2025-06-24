@@ -25,7 +25,7 @@ final pokemonServiceProvider = AutoDisposeProvider<PokemonService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PokemonServiceRef = AutoDisposeProviderRef<PokemonService>;
-String _$pokemonStateHash() => r'509d51630b1a7e8a3676fc0c098234e31a756f43';
+String _$pokemonStateHash() => r'7441050f50a5df88234ba74de50c658ec75a05f0';
 
 /// Pokemon 一覧の状態を管理するクラス。無限スクロール対応。
 ///

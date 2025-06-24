@@ -73,21 +73,26 @@ class LocalDatabase extends _$LocalDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
-          developer.log('Creating database schema (version $schemaVersion)', name: 'LocalDatabase');
+          developer.log('Creating database schema (version $schemaVersion)',
+              name: 'LocalDatabase');
           await m.createAll();
-          developer.log('Database schema created successfully', name: 'LocalDatabase');
+          developer.log('Database schema created successfully',
+              name: 'LocalDatabase');
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          developer.log('Upgrading database schema from $from to $to', name: 'LocalDatabase');
+          developer.log('Upgrading database schema from $from to $to',
+              name: 'LocalDatabase');
           if (from < 2) {
             // v1 -> v2: PartyPokemonsテーブルを追加
             developer.log('Adding PartyPokemons table', name: 'LocalDatabase');
             await m.createTable(partyPokemons);
 
             // 既存のパーティデータをPartyPokemonsテーブルに移行
-            developer.log('Migrating existing party data', name: 'LocalDatabase');
+            developer.log('Migrating existing party data',
+                name: 'LocalDatabase');
             await _migratePartyData();
-            developer.log('Party data migration completed', name: 'LocalDatabase');
+            developer.log('Party data migration completed',
+                name: 'LocalDatabase');
           }
           developer.log('Database upgrade completed', name: 'LocalDatabase');
         },
@@ -115,7 +120,8 @@ class LocalDatabase extends _$LocalDatabase {
 
   // CRUD convenience methods -------------------------------------------------
   Future<int> insertParty(PartiesCompanion companion) async {
-    developer.log('Inserting party: ${companion.name.value}', name: 'LocalDatabase');
+    developer.log('Inserting party: ${companion.name.value}',
+        name: 'LocalDatabase');
     final id = await into(parties).insert(companion);
     developer.log('Party inserted with ID: $id', name: 'LocalDatabase');
     return id;
@@ -124,12 +130,14 @@ class LocalDatabase extends _$LocalDatabase {
   Future<List<Party>> getAllParties() async {
     developer.log('Getting all parties', name: 'LocalDatabase');
     final result = await select(parties).get();
-    developer.log('Retrieved ${result.length} parties from database', name: 'LocalDatabase');
+    developer.log('Retrieved ${result.length} parties from database',
+        name: 'LocalDatabase');
     return result;
   }
 
   Future<bool> updateParty(Party party) async {
-    developer.log('Updating party: ${party.name} (ID: ${party.id})', name: 'LocalDatabase');
+    developer.log('Updating party: ${party.name} (ID: ${party.id})',
+        name: 'LocalDatabase');
     final result = await update(parties).replace(party);
     developer.log('Party update result: $result', name: 'LocalDatabase');
     return result;
@@ -137,8 +145,10 @@ class LocalDatabase extends _$LocalDatabase {
 
   Future<int> deleteParty(int id) async {
     developer.log('Deleting party with ID: $id', name: 'LocalDatabase');
-    final result = await (delete(parties)..where((tbl) => tbl.id.equals(id))).go();
-    developer.log('Party delete result: $result rows affected', name: 'LocalDatabase');
+    final result =
+        await (delete(parties)..where((tbl) => tbl.id.equals(id))).go();
+    developer.log('Party delete result: $result rows affected',
+        name: 'LocalDatabase');
     return result;
   }
 

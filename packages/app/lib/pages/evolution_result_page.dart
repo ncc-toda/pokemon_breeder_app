@@ -21,7 +21,14 @@ class _GoRouterEvolutionNavigationService
   @override
   Future<void> returnToPartyWithRefresh(WidgetRef ref) async {
     // パーティ画面の状態を更新
-    ref.read(currentPartyStateProvider.notifier).reload();
+    final result = await ref.read(currentPartyStateProvider.notifier).reload();
+    result.when(
+      success: (_) => {},
+      failure: (failure) {
+        debugPrint(
+            'Failed to reload party after evolution: ${failure.message}');
+      },
+    );
 
     // パーティ画面に戻る
     if (context.mounted) {

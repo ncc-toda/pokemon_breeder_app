@@ -90,26 +90,29 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
         Navigator.of(context).pop();
       }
 
-      if (result.success) {
-        // 進化成功：進化結果画面に遷移
-        if (context.mounted) {
-          context.pushReplacement('/evolution-result', extra: {
-            'beforePokemon': params.beforePokemon,
-            'afterPokemon': params.afterPokemon,
-            'message': result.message,
-          });
-        }
-      } else {
-        // 進化失敗：エラーメッセージを表示
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        }
-      }
+      result.when(
+        success: (evolutionData) {
+          // 進化成功：進化結果画面に遷移
+          if (context.mounted) {
+            context.pushReplacement('/evolution-result', extra: {
+              'beforePokemon': params.beforePokemon,
+              'afterPokemon': params.afterPokemon,
+              'message': evolutionData.message,
+            });
+          }
+        },
+        failure: (failure) {
+          // 進化失敗：エラーメッセージを表示
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(failure.message),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
+      );
     } catch (error) {
       // ローディングを閉じる
       if (context.mounted) {

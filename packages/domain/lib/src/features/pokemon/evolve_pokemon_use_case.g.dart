@@ -7,7 +7,7 @@ part of 'evolve_pokemon_use_case.dart';
 // **************************************************************************
 
 String _$evolvePokemonUseCaseHash() =>
-    r'79c7d0f00436e7366d9ac2452bd3953b9c00f8af';
+    r'6fdbd5cbfc2ca7aac0d35249ea9bef3c5a9ef554';
 
 /// ポケモンの進化処理を実行するUseCase。
 ///

@@ -55,9 +55,29 @@ This is a multi-package Flutter monorepo following Clean Architecture principles
 - **Type Safety**: Explicit type annotations required, avoid `dynamic`
 - **Null Safety**: Proper use of nullable/non-nullable types
 - **Immutability**: Use `freezed` for data classes, prefer `final`
-- **Error Handling**: Use Result types instead of exceptions
+- **Error Handling**: Use Result types for domain layer, AsyncValue for UI layer
 - **Comments**: Japanese language, document public APIs with `///`
 - **Code Generation**: Commit generated `.g.dart` and `.freezed.dart` files
+
+### Error Handling Strategy
+- **Domain Layer**: All public APIs return `Result<Success, DomainFailure>` types
+  - Success path: Use `Success(value)` for successful operations
+  - Error path: Use `Failure(DomainFailure.*)` with appropriate failure types
+  - Pattern matching: Use `result.when(success: ..., failure: ...)` for handling
+- **UI Layer**: Continue using `AsyncValue` for state management with Riverpod
+  - Convert Result types to AsyncValue where needed
+  - Handle failures gracefully with user-friendly error messages
+- **Available DomainFailure Types**:
+  - `dataFetchFailed`: Data retrieval errors
+  - `dataSaveFailed`: Data persistence errors  
+  - `dataDeleteFailed`: Data deletion errors
+  - `networkError`: Network-related failures
+  - `databaseError`: Database operation failures
+  - `validationError`: Input validation failures
+  - `notFound`: Entity not found errors
+  - `unauthorized`: Permission-related errors
+  - `evolutionError`: Pokemon evolution/devolution errors
+  - `unexpected`: Unexpected system errors
 
 ### Widget Development Rules
 - **buildXX Methods Prohibited**: Use Widget inheritance instead of buildXX helper methods
