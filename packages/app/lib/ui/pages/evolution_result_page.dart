@@ -147,25 +147,10 @@ class _EvolutionResultContentState extends State<_EvolutionResultContent>
       const Duration(seconds: EvolutionResultPage.autoTransitionDelay),
       () {
         if (!_hasUserInteracted && mounted) {
-          _returnToParty();
+          widget.onReturnToParty();
         }
       },
     );
-  }
-
-  void _onEvolutionAnimationComplete() {
-    // 進化アニメーション完了後にメッセージを表示
-    _messageController.forward();
-  }
-
-  void _onUserTap() {
-    _hasUserInteracted = true;
-    _autoTransitionTimer?.cancel();
-    _returnToParty();
-  }
-
-  void _returnToParty() {
-    widget.onReturnToParty();
   }
 
   @override
@@ -175,7 +160,11 @@ class _EvolutionResultContentState extends State<_EvolutionResultContent>
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        onTap: _onUserTap,
+        onTap: () {
+          _hasUserInteracted = true;
+          _autoTransitionTimer?.cancel();
+          widget.onReturnToParty();
+        },
         behavior: HitTestBehavior.opaque,
         child: Container(
           width: double.infinity,
@@ -207,7 +196,10 @@ class _EvolutionResultContentState extends State<_EvolutionResultContent>
                       size: 200,
                     ),
                     duration: const Duration(seconds: 3),
-                    onComplete: _onEvolutionAnimationComplete,
+                    onComplete: () {
+                      // 進化アニメーション完了後にメッセージを表示
+                      _messageController.forward();
+                    },
                   ),
                 ),
 
