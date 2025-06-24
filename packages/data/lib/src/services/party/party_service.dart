@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:domain/src/features/party/party.dart' as domain;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -15,8 +17,22 @@ class PartyService {
 
   /// すべてのパーティを取得する。
   Future<List<domain.Party>> getAllParties() async {
-    final parties = await _database.getAllParties();
-    return parties.map(_convertToEntity).toList();
+    try {
+      developer.log('Getting all parties from database', name: 'PartyService');
+      final parties = await _database.getAllParties();
+      developer.log('Retrieved ${parties.length} parties from database', name: 'PartyService');
+      final domainParties = parties.map(_convertToEntity).toList();
+      developer.log('Converted to ${domainParties.length} domain parties', name: 'PartyService');
+      return domainParties;
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to get all parties: $error',
+        name: 'PartyService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   /// ID でパーティを取得する。
@@ -28,16 +44,31 @@ class PartyService {
 
   /// 新しいパーティを作成する。
   Future<domain.Party> createParty(String name) async {
-    final companion = PartiesCompanion.insert(
-      name: name,
-      pokemonIds: const [],
-    );
+    try {
+      developer.log('Creating new party: $name', name: 'PartyService');
+      final companion = PartiesCompanion.insert(
+        name: name,
+        pokemonIds: const [],
+      );
 
-    final id = await _database.insertParty(companion);
-    final parties = await _database.getAllParties();
-    final createdParty = parties.where((p) => p.id == id).first;
-
-    return _convertToEntity(createdParty);
+      final id = await _database.insertParty(companion);
+      developer.log('Party created with ID: $id', name: 'PartyService');
+      
+      final parties = await _database.getAllParties();
+      final createdParty = parties.where((p) => p.id == id).first;
+      
+      final domainParty = _convertToEntity(createdParty);
+      developer.log('Party converted to domain entity: ${domainParty.name}', name: 'PartyService');
+      return domainParty;
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to create party: $error',
+        name: 'PartyService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   /// パーティを更新する。

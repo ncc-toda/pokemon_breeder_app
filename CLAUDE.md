@@ -77,9 +77,12 @@ This is a multi-package Flutter monorepo following Clean Architecture principles
 - ❌ Evolution pages not routed
 
 ### Local Database
-- **Storage**: SQLite with drift
+- **Storage**: SQLite with drift (native), IndexedDB with drift (web)
 - **Provider**: Uses Riverpod for dependency injection
 - **Location**: `packages/data/src/services/local_storage/`
+- **Platform Support**: 
+  - Native: `NativeDatabase` with SQLite files
+  - Web: `WebDatabase` with IndexedDB (sql.js library required)
 
 ### Design System Usage
 All UI components should use the design system package:

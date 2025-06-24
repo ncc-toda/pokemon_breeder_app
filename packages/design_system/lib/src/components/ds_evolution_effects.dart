@@ -9,22 +9,22 @@ import 'package:flutter/material.dart';
 class _ParticleConstants {
   /// パーティクルの最小サイズ
   static const double minSize = 2;
-  
+
   /// パーティクルサイズの変動幅
   static const double maxSizeRange = 6;
-  
+
   /// パーティクルの最小透明度
   static const double minOpacity = 0.2;
-  
+
   /// パーティクル透明度の変動幅
   static const double maxOpacityRange = 0.8;
-  
+
   /// パーティクルの移動速度倍率
   static const double velocityMultiplier = 100;
-  
+
   /// 画面端のバッファ領域
   static const double screenBuffer = 50;
-  
+
   /// パーティクルサイズの成長倍率
   static const double sizeGrowthMultiplier = 2;
 }
@@ -33,7 +33,7 @@ class _ParticleConstants {
 class _RadialBurstConstants {
   /// 集中線の開始半径倍率
   static const double startRadiusMultiplier = 50;
-  
+
   /// 集中線の線幅
   static const double strokeWidth = 2;
 }
@@ -84,7 +84,7 @@ class _DsEvolutionParticlesState extends State<DsEvolutionParticles>
       vsync: this,
     );
     _initializeParticles();
-    
+
     // 外部からアニメーション制御できるようにコールバックを渡す
     widget.onInitialize?.call(startAnimation);
   }
@@ -105,8 +105,10 @@ class _DsEvolutionParticlesState extends State<DsEvolutionParticles>
           (random.nextDouble() - 0.5) * 2,
           (random.nextDouble() - 0.5) * 2,
         ),
-        size: random.nextDouble() * _ParticleConstants.maxSizeRange + _ParticleConstants.minSize,
-        opacity: random.nextDouble() * _ParticleConstants.maxOpacityRange + _ParticleConstants.minOpacity,
+        size: random.nextDouble() * _ParticleConstants.maxSizeRange +
+            _ParticleConstants.minSize,
+        opacity: random.nextDouble() * _ParticleConstants.maxOpacityRange +
+            _ParticleConstants.minOpacity,
       );
     });
   }
@@ -215,7 +217,7 @@ class _DsRadialBurstState extends State<DsRadialBurst>
         curve: Curves.easeOut,
       ),
     );
-    
+
     // 外部からアニメーション制御できるようにコールバックを渡す
     widget.onInitialize?.call(startAnimation);
   }
@@ -337,10 +339,14 @@ class ParticlesPainter extends CustomPainter {
 
     for (final particle in particles) {
       // パーティクルの現在位置を計算
-      final currentX = particle.x * size.width + 
-          particle.velocity.dx * progress * _ParticleConstants.velocityMultiplier;
-      final currentY = particle.y * size.height + 
-          particle.velocity.dy * progress * _ParticleConstants.velocityMultiplier;
+      final currentX = particle.x * size.width +
+          particle.velocity.dx *
+              progress *
+              _ParticleConstants.velocityMultiplier;
+      final currentY = particle.y * size.height +
+          particle.velocity.dy *
+              progress *
+              _ParticleConstants.velocityMultiplier;
 
       // 画面外のパーティクルはスキップ
       if (currentX < -_ParticleConstants.screenBuffer ||
@@ -355,7 +361,8 @@ class ParticlesPainter extends CustomPainter {
       paint.color = color.withValues(alpha: opacity);
 
       // パーティクルのサイズを計算（時間とともに変化）
-      final currentSize = particle.size * (1.0 + progress * _ParticleConstants.sizeGrowthMultiplier);
+      final currentSize = particle.size *
+          (1.0 + progress * _ParticleConstants.sizeGrowthMultiplier);
 
       // パーティクルを描画
       canvas.drawCircle(
@@ -368,9 +375,9 @@ class ParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ParticlesPainter oldDelegate) {
-    return oldDelegate.progress != progress || 
-           oldDelegate.color != color ||
-           !listEquals(oldDelegate.particles, particles);
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        !listEquals(oldDelegate.particles, particles);
   }
 }
 

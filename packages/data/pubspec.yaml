@@ -13,6 +13,10 @@ dependencies:
   # Drift for local database
   drift: ^2.16.0
   sqlite3_flutter_libs: ^0.5.0
+  
+  # Foundation library for Flutter (provides kIsWeb)
+  flutter:
+    sdk: flutter
 
   # Riverpod for providing database instance
   riverpod: ^2.6.1

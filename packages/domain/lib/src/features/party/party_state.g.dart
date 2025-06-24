@@ -24,7 +24,7 @@ final partyListStateProvider = AutoDisposeNotifierProvider<PartyListState,
 );
 
 typedef _$PartyListState = AutoDisposeNotifier<AsyncValue<List<Party>>>;
-String _$currentPartyStateHash() => r'66067938c3f7a7167ff723c921e8de2a24532d49';
+String _$currentPartyStateHash() => r'a5fc06c3984e85c572f2df04c3c09c76adae3211';
 
 /// 現在選択中のパーティの状態を管理するクラス。
 ///

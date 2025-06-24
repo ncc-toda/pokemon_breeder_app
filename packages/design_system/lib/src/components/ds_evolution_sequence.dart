@@ -3,25 +3,24 @@ import 'ds_evolution_effects.dart';
 
 /// アニメーション段階とタイミングを管理するクラス
 class _EvolutionTimeline {
-
   /// パーティクル開始のタイミング
   static const _ProgressRange particlesTrigger = _ProgressRange(0.2, 0.25);
-  
+
   /// バースト開始のタイミング
   static const _ProgressRange burstTrigger = _ProgressRange(0.5, 0.55);
 
   /// 指定された進行状況で実行すべきアクションを返す
   static List<_EvolutionAction> getActionsForProgress(double progress) {
     final actions = <_EvolutionAction>[];
-    
+
     if (particlesTrigger.contains(progress)) {
       actions.add(_EvolutionAction.startParticles);
     }
-    
+
     if (burstTrigger.contains(progress)) {
       actions.add(_EvolutionAction.startBurst);
     }
-    
+
     return actions;
   }
 }
@@ -29,10 +28,10 @@ class _EvolutionTimeline {
 /// 進行範囲を表すクラス
 class _ProgressRange {
   const _ProgressRange(this.start, this.end);
-  
+
   final double start;
   final double end;
-  
+
   bool contains(double progress) => progress >= start && progress <= end;
 }
 
@@ -46,14 +45,19 @@ enum _EvolutionAction {
 enum EvolutionPhase {
   /// 初期状態
   initial,
+
   /// シルエット表示
   silhouette,
+
   /// チャージ中
   charging,
+
   /// バースト
   burst,
+
   /// 出現
   reveal,
+
   /// 完了
   complete,
 }
@@ -225,7 +229,8 @@ class _DsEvolutionSequenceState extends State<DsEvolutionSequence>
             gradient: RadialGradient(
               radius: 1,
               colors: [
-                theme.colorScheme.primary.withValues(alpha: _glowOpacity.value * 0.3),
+                theme.colorScheme.primary
+                    .withValues(alpha: _glowOpacity.value * 0.3),
                 theme.colorScheme.surface,
               ],
             ),
@@ -237,8 +242,8 @@ class _DsEvolutionSequenceState extends State<DsEvolutionSequence>
               DsEvolutionParticles(
                 particleCount: 80,
                 duration: Duration(
-                    milliseconds:
-                        (widget.duration.inMilliseconds * 0.6).round(),),
+                  milliseconds: (widget.duration.inMilliseconds * 0.6).round(),
+                ),
                 color: theme.colorScheme.primary.withValues(alpha: 0.8),
                 onInitialize: (startAnimation) {
                   _startParticles = startAnimation;
@@ -284,7 +289,8 @@ class _DsEvolutionSequenceState extends State<DsEvolutionSequence>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.5),
                           blurRadius: 50,
                           spreadRadius: 30,
                         ),

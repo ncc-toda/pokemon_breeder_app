@@ -31,6 +31,28 @@
 
   <title>pokemon_breeder_app</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- SQL.js library for drift web database -->
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.js"></script>
+  <script>
+    // Configure SQL.js initialization for drift
+    window.addEventListener('load', function() {
+      if (typeof initSqlJs !== 'undefined') {
+        initSqlJs({
+          locateFile: function(file) {
+            if (file === 'sql-wasm.wasm') {
+              return 'https://cdn.jsdelivr.net/npm/sql.js@1.10.2/dist/sql-wasm.wasm';
+            }
+            return file;
+          }
+        }).then(function(SQL) {
+          window.SQL = SQL;
+        }).catch(function(err) {
+          console.error('Failed to initialize SQL.js:', err);
+        });
+      }
+    });
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

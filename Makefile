@@ -16,9 +16,7 @@ clean_pub_get:
 test_app:
 	cd packages/app && fvm flutter test
 
-.PHONY: test_common
-test_common:
-	cd packages/common && fvm dart test
+# test_common: packages/common not exists
 
 .PHONY: test_data
 test_data:
@@ -31,7 +29,6 @@ test_domain:
 .PHONY: test
 test:
 	make test_app
-	make test_common
 	make test_data
 	make test_domain
 
@@ -39,7 +36,7 @@ test:
 .PHONY: analyze
 analyze:
 	cd packages/app && fvm flutter analyze .
-	cd packages/common && fvm flutter analyze .
+	cd packages/design_system && fvm flutter analyze .
 	cd packages/data && fvm flutter analyze .
 	cd packages/domain && fvm flutter analyze .
 

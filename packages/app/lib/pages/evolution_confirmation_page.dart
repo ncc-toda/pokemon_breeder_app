@@ -64,8 +64,6 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
     );
   }
 
-
-
   /// キャンセルボタンがタップされた時の処理。
   void _onCancel(BuildContext context) {
     context.pop();
