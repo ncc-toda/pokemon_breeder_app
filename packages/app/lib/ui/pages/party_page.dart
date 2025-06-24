@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:domain/domain.dart';
-import 'package:pokemon_breeder_app/pages/evolution_confirmation_page.dart';
+import 'package:pokemon_breeder_app/ui/pages/evolution_confirmation_page.dart';
 
 class PartyPage extends HookConsumerWidget {
   const PartyPage({super.key});
@@ -227,7 +227,8 @@ class PartyPage extends HookConsumerWidget {
   void _startEvolution(BuildContext context, WidgetRef ref, Pokemon pokemon,
       int partyPokemonId) {
     // 進化先のポケモンIDを取得
-    final evolutionTargetId = EvolutionDataHelper.getEvolutionTarget(pokemon.id);
+    final evolutionTargetId =
+        EvolutionDataHelper.getEvolutionTarget(pokemon.id);
     if (evolutionTargetId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

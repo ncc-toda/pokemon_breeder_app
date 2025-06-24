@@ -65,4 +65,3 @@ sealed class DomainFailure with _$DomainFailure {
     Object? cause,
   }) = _Unexpected;
 }
-
