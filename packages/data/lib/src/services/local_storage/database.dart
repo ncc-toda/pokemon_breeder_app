@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 
 import 'package:drift/drift.dart';
-import 'package:drift/drift.dart' show driftRuntimeOptions;
 
 import 'database_connection.dart'
     if (dart.library.html) 'database_connection_web.dart'
