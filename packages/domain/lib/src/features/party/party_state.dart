@@ -1,5 +1,7 @@
+import 'package:data/src/services/local_storage/database.dart' as db;
 import 'package:data/src/services/local_storage/local_database_provider.dart';
 import 'package:data/src/services/party/party_service.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -109,8 +111,24 @@ class CurrentPartyState extends _$CurrentPartyState {
 
     try {
       final partyService = ref.read(partyServiceProvider);
+      final database = ref.read(localDatabaseProvider);
+      
       final updatedParty = currentParty.addPokemon(pokemonId);
       await partyService.updateParty(updatedParty);
+      
+      // partyPokemonsテーブルにも同期
+      final currentSlots = await database.getPartyPokemons(currentParty.id);
+      final position = updatedParty.pokemonIds.length - 1; // 最後に追加された位置
+      
+      await database.insertPartyPokemon(
+        db.PartyPokemonsCompanion.insert(
+          partyId: currentParty.id,
+          pokemonId: pokemonId,
+          position: position,
+          breedingCounter: const Value(0),
+        ),
+      );
+      
       state = AsyncValue.data(updatedParty);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -125,8 +143,20 @@ class CurrentPartyState extends _$CurrentPartyState {
 
     try {
       final partyService = ref.read(partyServiceProvider);
+      final database = ref.read(localDatabaseProvider);
+      
       final updatedParty = currentParty.removePokemon(pokemonId);
       await partyService.updateParty(updatedParty);
+      
+      // partyPokemonsテーブルからも削除
+      final partyPokemon = await (database.select(database.partyPokemons)
+        ..where((tbl) => tbl.partyId.equals(currentParty.id) & tbl.pokemonId.equals(pokemonId)))
+        .getSingleOrNull();
+      
+      if (partyPokemon != null) {
+        await database.deletePartyPokemon(partyPokemon.id);
+      }
+      
       state = AsyncValue.data(updatedParty);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
