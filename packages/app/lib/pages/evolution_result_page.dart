@@ -12,16 +12,17 @@ abstract class EvolutionNavigationService {
 }
 
 /// GoRouterを使用したナビゲーション実装
-class _GoRouterEvolutionNavigationService implements EvolutionNavigationService {
+class _GoRouterEvolutionNavigationService
+    implements EvolutionNavigationService {
   const _GoRouterEvolutionNavigationService(this.context);
-  
+
   final BuildContext context;
 
   @override
   Future<void> returnToPartyWithRefresh(WidgetRef ref) async {
     // パーティ画面の状態を更新
     ref.read(currentPartyStateProvider.notifier).reload();
-    
+
     // パーティ画面に戻る
     if (context.mounted) {
       context.go('/party');
@@ -61,7 +62,7 @@ class EvolutionResultPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationService = _GoRouterEvolutionNavigationService(context);
-    
+
     return _EvolutionResultContent(
       params: params,
       onReturnToParty: () => navigationService.returnToPartyWithRefresh(ref),

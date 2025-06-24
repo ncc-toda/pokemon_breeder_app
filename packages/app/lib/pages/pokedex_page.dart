@@ -113,7 +113,8 @@ class PokedexPage extends HookConsumerWidget {
 
                 return _PokemonListView(
                   config: PokemonListViewConfig(
-                    pokemons: searchQuery.isNotEmpty ? filteredPokemons : pokemons,
+                    pokemons:
+                        searchQuery.isNotEmpty ? filteredPokemons : pokemons,
                     scrollController: scrollController,
                     isLoadingMore: isLoadingMore.value,
                     showLoadingMore: searchQuery.isEmpty, // 検索中は追加読み込み表示しない
@@ -131,10 +132,6 @@ class PokedexPage extends HookConsumerWidget {
       ),
     );
   }
-
-
-
-
 }
 
 /// Shimmerローディング表示用のWidgetクラス
@@ -289,7 +286,7 @@ class _PokemonListView extends StatelessWidget {
     return ListView.builder(
       controller: config.scrollController,
       padding: DsPadding.allS,
-      itemCount: config.pokemons.length + 
+      itemCount: config.pokemons.length +
           (config.isLoadingMore && config.showLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= config.pokemons.length) {
