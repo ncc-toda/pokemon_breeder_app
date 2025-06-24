@@ -117,7 +117,6 @@ class CurrentPartyState extends _$CurrentPartyState {
       await partyService.updateParty(updatedParty);
       
       // partyPokemonsテーブルにも同期
-      final currentSlots = await database.getPartyPokemons(currentParty.id);
       final position = updatedParty.pokemonIds.length - 1; // 最後に追加された位置
       
       await database.insertPartyPokemon(
