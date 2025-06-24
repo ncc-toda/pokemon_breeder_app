@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:drift/web.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+
+import 'database_connection.dart'
+    if (dart.library.html) 'database_connection_web.dart'
+    if (dart.library.io) 'database_connection_native.dart';
 
 part 'database.g.dart';
 
@@ -63,7 +60,7 @@ class _StringListConverter extends TypeConverter<List<String>, String> {
 
 @DriftDatabase(tables: [Parties, PartyPokemons])
 class LocalDatabase extends _$LocalDatabase {
-  LocalDatabase() : super(_openConnection());
+  LocalDatabase() : super(createDatabaseConnection());
 
   @override
   int get schemaVersion => 2;
@@ -144,18 +141,4 @@ class LocalDatabase extends _$LocalDatabase {
     ));
     return result > 0;
   }
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    if (kIsWeb) {
-      // Web環境ではIndexedDBを使用
-      return WebDatabase('pokemon_breeder_db');
-    } else {
-      // ネイティブ環境では従来のSQLiteファイルを使用
-      final Directory appDocDir = await getApplicationDocumentsDirectory();
-      final String dbPath = p.join(appDocDir.path, 'pokemon_breeder.db');
-      return NativeDatabase(File(dbPath));
-    }
-  });
 }
