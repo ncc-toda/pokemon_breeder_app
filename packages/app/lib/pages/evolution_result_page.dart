@@ -5,6 +5,30 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:domain/domain.dart';
 
+/// ナビゲーション処理を抽象化するインターフェース
+abstract class EvolutionNavigationService {
+  /// パーティ画面に戻り、状態を更新する
+  Future<void> returnToPartyWithRefresh(WidgetRef ref);
+}
+
+/// GoRouterを使用したナビゲーション実装
+class _GoRouterEvolutionNavigationService implements EvolutionNavigationService {
+  const _GoRouterEvolutionNavigationService(this.context);
+  
+  final BuildContext context;
+
+  @override
+  Future<void> returnToPartyWithRefresh(WidgetRef ref) async {
+    // パーティ画面の状態を更新
+    ref.read(currentPartyStateProvider.notifier).reload();
+    
+    // パーティ画面に戻る
+    if (context.mounted) {
+      context.go('/party');
+    }
+  }
+}
+
 /// 進化結果画面のパラメータ。
 class EvolutionResultParams {
   const EvolutionResultParams({
@@ -36,19 +60,12 @@ class EvolutionResultPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final navigationService = _GoRouterEvolutionNavigationService(context);
+    
     return _EvolutionResultContent(
       params: params,
-      onReturnToParty: () => _onReturnToParty(context, ref),
+      onReturnToParty: () => navigationService.returnToPartyWithRefresh(ref),
     );
-  }
-
-  /// パーティ画面に戻る処理。
-  void _onReturnToParty(BuildContext context, WidgetRef ref) {
-    // パーティ画面の状態を更新するため、currentPartyStateProviderを更新
-    ref.read(currentPartyStateProvider.notifier).reload();
-
-    // パーティ画面に戻る
-    context.go('/party');
   }
 }
 
@@ -62,7 +79,7 @@ class _EvolutionResultContent extends StatefulWidget {
   });
 
   final EvolutionResultParams params;
-  final VoidCallback onReturnToParty;
+  final Future<void> Function() onReturnToParty;
 
   @override
   State<_EvolutionResultContent> createState() =>
@@ -116,6 +133,8 @@ class _EvolutionResultContentState extends State<_EvolutionResultContent>
   }
 
   void _startAutoTransitionTimer() {
+    // 既存のTimerがあれば確実にキャンセル
+    _autoTransitionTimer?.cancel();
     _autoTransitionTimer = Timer(
       const Duration(seconds: EvolutionResultPage.autoTransitionDelay),
       () {

@@ -1,6 +1,47 @@
 import 'package:flutter/material.dart';
 import 'ds_evolution_effects.dart';
 
+/// アニメーション段階とタイミングを管理するクラス
+class _EvolutionTimeline {
+
+  /// パーティクル開始のタイミング
+  static const _ProgressRange particlesTrigger = _ProgressRange(0.2, 0.25);
+  
+  /// バースト開始のタイミング
+  static const _ProgressRange burstTrigger = _ProgressRange(0.5, 0.55);
+
+  /// 指定された進行状況で実行すべきアクションを返す
+  static List<_EvolutionAction> getActionsForProgress(double progress) {
+    final actions = <_EvolutionAction>[];
+    
+    if (particlesTrigger.contains(progress)) {
+      actions.add(_EvolutionAction.startParticles);
+    }
+    
+    if (burstTrigger.contains(progress)) {
+      actions.add(_EvolutionAction.startBurst);
+    }
+    
+    return actions;
+  }
+}
+
+/// 進行範囲を表すクラス
+class _ProgressRange {
+  const _ProgressRange(this.start, this.end);
+  
+  final double start;
+  final double end;
+  
+  bool contains(double progress) => progress >= start && progress <= end;
+}
+
+/// 進化アニメーションで実行可能なアクション
+enum _EvolutionAction {
+  startParticles,
+  startBurst,
+}
+
 /// アニメーションの段階
 enum EvolutionPhase {
   /// 初期状態
@@ -77,6 +118,8 @@ class _DsEvolutionSequenceState extends State<DsEvolutionSequence>
   @override
   void dispose() {
     _masterController.dispose();
+    _startParticles = null;
+    _startBurst = null;
     super.dispose();
   }
 
@@ -141,13 +184,15 @@ class _DsEvolutionSequenceState extends State<DsEvolutionSequence>
   void _onAnimationProgress() {
     final progress = _masterController.value;
 
-    // 段階に応じてエフェクトを開始
-    if (progress >= 0.2 && progress < 0.25) {
-      // パーティクルエフェクト開始
-      _startParticles?.call();
-    } else if (progress >= 0.5 && progress < 0.55) {
-      // 集中線バースト開始
-      _startBurst?.call();
+    // タイムラインに基づいてアクションを実行
+    final actions = _EvolutionTimeline.getActionsForProgress(progress);
+    for (final action in actions) {
+      switch (action) {
+        case _EvolutionAction.startParticles:
+          _startParticles?.call();
+        case _EvolutionAction.startBurst:
+          _startBurst?.call();
+      }
     }
   }
 

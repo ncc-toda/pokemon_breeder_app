@@ -2,7 +2,41 @@
 library;
 
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+/// パーティクルエフェクトに関する定数
+class _ParticleConstants {
+  /// パーティクルの最小サイズ
+  static const double minSize = 2;
+  
+  /// パーティクルサイズの変動幅
+  static const double maxSizeRange = 6;
+  
+  /// パーティクルの最小透明度
+  static const double minOpacity = 0.2;
+  
+  /// パーティクル透明度の変動幅
+  static const double maxOpacityRange = 0.8;
+  
+  /// パーティクルの移動速度倍率
+  static const double velocityMultiplier = 100;
+  
+  /// 画面端のバッファ領域
+  static const double screenBuffer = 50;
+  
+  /// パーティクルサイズの成長倍率
+  static const double sizeGrowthMultiplier = 2;
+}
+
+/// 集中線エフェクトに関する定数
+class _RadialBurstConstants {
+  /// 集中線の開始半径倍率
+  static const double startRadiusMultiplier = 50;
+  
+  /// 集中線の線幅
+  static const double strokeWidth = 2;
+}
 
 /// パーティクルエフェクトを表示するウィジェット。
 ///
@@ -71,8 +105,8 @@ class _DsEvolutionParticlesState extends State<DsEvolutionParticles>
           (random.nextDouble() - 0.5) * 2,
           (random.nextDouble() - 0.5) * 2,
         ),
-        size: random.nextDouble() * 6 + 2,
-        opacity: random.nextDouble() * 0.8 + 0.2,
+        size: random.nextDouble() * _ParticleConstants.maxSizeRange + _ParticleConstants.minSize,
+        opacity: random.nextDouble() * _ParticleConstants.maxOpacityRange + _ParticleConstants.minOpacity,
       );
     });
   }
@@ -231,9 +265,10 @@ class _DsRadialBurstState extends State<DsRadialBurst>
 }
 
 /// パーティクル情報を保持するクラス
+@immutable
 class Particle {
   /// パーティクルを作成します。
-  Particle({
+  const Particle({
     required this.x,
     required this.y,
     required this.velocity,
@@ -255,6 +290,25 @@ class Particle {
 
   /// パーティクルの透明度
   final double opacity;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Particle &&
+          runtimeType == other.runtimeType &&
+          x == other.x &&
+          y == other.y &&
+          velocity == other.velocity &&
+          size == other.size &&
+          opacity == other.opacity;
+
+  @override
+  int get hashCode =>
+      x.hashCode ^
+      y.hashCode ^
+      velocity.hashCode ^
+      size.hashCode ^
+      opacity.hashCode;
 }
 
 /// パーティクルエフェクトを描画するPainter
@@ -283,16 +337,16 @@ class ParticlesPainter extends CustomPainter {
 
     for (final particle in particles) {
       // パーティクルの現在位置を計算
-      final currentX =
-          particle.x * size.width + particle.velocity.dx * progress * 100;
-      final currentY =
-          particle.y * size.height + particle.velocity.dy * progress * 100;
+      final currentX = particle.x * size.width + 
+          particle.velocity.dx * progress * _ParticleConstants.velocityMultiplier;
+      final currentY = particle.y * size.height + 
+          particle.velocity.dy * progress * _ParticleConstants.velocityMultiplier;
 
       // 画面外のパーティクルはスキップ
-      if (currentX < -50 ||
-          currentX > size.width + 50 ||
-          currentY < -50 ||
-          currentY > size.height + 50) {
+      if (currentX < -_ParticleConstants.screenBuffer ||
+          currentX > size.width + _ParticleConstants.screenBuffer ||
+          currentY < -_ParticleConstants.screenBuffer ||
+          currentY > size.height + _ParticleConstants.screenBuffer) {
         continue;
       }
 
@@ -301,7 +355,7 @@ class ParticlesPainter extends CustomPainter {
       paint.color = color.withValues(alpha: opacity);
 
       // パーティクルのサイズを計算（時間とともに変化）
-      final currentSize = particle.size * (1.0 + progress * 2);
+      final currentSize = particle.size * (1.0 + progress * _ParticleConstants.sizeGrowthMultiplier);
 
       // パーティクルを描画
       canvas.drawCircle(
@@ -314,7 +368,9 @@ class ParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ParticlesPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.color != color;
+    return oldDelegate.progress != progress || 
+           oldDelegate.color != color ||
+           !listEquals(oldDelegate.particles, particles);
   }
 }
 
@@ -347,13 +403,13 @@ class RadialBurstPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = color.withValues(alpha: opacity)
-      ..strokeWidth = 2.0
+      ..strokeWidth = _RadialBurstConstants.strokeWidth
       ..style = PaintingStyle.stroke;
 
     // 集中線を描画
     for (var i = 0; i < lineCount; i++) {
       final angle = (i / lineCount) * 2 * math.pi;
-      final startRadius = 50.0 * scale;
+      final startRadius = _RadialBurstConstants.startRadiusMultiplier * scale;
       final endRadius = maxRadius;
 
       final startX = center.dx + math.cos(angle) * startRadius;
