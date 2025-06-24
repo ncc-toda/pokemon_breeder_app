@@ -385,8 +385,49 @@ class _PokemonListItem extends ConsumerWidget {
               ),
               onPressed: (isAlreadyAdded || isPartyFull)
                   ? null
-                  : () {
-                      _addToParty(context, ref, pokemon);
+                  : () async {
+                      final result = await ref
+                          .read(currentPartyStateProvider.notifier)
+                          .addPokemonToParty(pokemon.id);
+
+                      result.when(
+                        success: (updatedParty) {
+                          // スナックバーで成功メッセージを表示
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text('${pokemon.displayName} をパーティに追加しました'),
+                              duration: const Duration(seconds: 2),
+                              action: SnackBarAction(
+                                label: '取り消し',
+                                onPressed: () async {
+                                  final removeResult = await ref
+                                      .read(currentPartyStateProvider.notifier)
+                                      .removePokemonFromParty(pokemon.id);
+                                  removeResult.when(
+                                    success: (_) => {},
+                                    failure: (failure) {
+                                      debugPrint(
+                                          'Failed to remove pokemon: ${failure.message}');
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        failure: (failure) {
+                          // エラーメッセージを表示
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('エラー: ${failure.message}'),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.error,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        },
+                      );
                     },
               tooltip: isAlreadyAdded
                   ? 'パーティに追加済み'
@@ -400,49 +441,6 @@ class _PokemonListItem extends ConsumerWidget {
           // TODO(tetsu): Pokemon詳細画面への遷移
         },
       ),
-    );
-  }
-
-  /// ポケモンをパーティに追加する。
-  void _addToParty(BuildContext context, WidgetRef ref, Pokemon pokemon) async {
-    final result = await ref
-        .read(currentPartyStateProvider.notifier)
-        .addPokemonToParty(pokemon.id);
-
-    result.when(
-      success: (updatedParty) {
-        // スナックバーで成功メッセージを表示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${pokemon.displayName} をパーティに追加しました'),
-            duration: const Duration(seconds: 2),
-            action: SnackBarAction(
-              label: '取り消し',
-              onPressed: () async {
-                final removeResult = await ref
-                    .read(currentPartyStateProvider.notifier)
-                    .removePokemonFromParty(pokemon.id);
-                removeResult.when(
-                  success: (_) => {},
-                  failure: (failure) {
-                    debugPrint('Failed to remove pokemon: ${failure.message}');
-                  },
-                );
-              },
-            ),
-          ),
-        );
-      },
-      failure: (failure) {
-        // エラーメッセージを表示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('エラー: ${failure.message}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      },
     );
   }
 }

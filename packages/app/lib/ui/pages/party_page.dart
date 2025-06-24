@@ -99,21 +99,52 @@ class PartyPage extends HookConsumerWidget {
                                 canEvolve: slot.canEvolve,
                                 progressPercentage: slot.progressPercentage,
                                 onTap: pokemon != null
-                                    ? () => _showPokemonOptions(
-                                        context,
-                                        ref,
-                                        pokemon,
-                                        filled.partyPokemonId,
-                                        slot.canEvolve)
+                                    ? () => showModalBottomSheet<void>(
+                                          context: context,
+                                          builder: (BuildContext context) =>
+                                              _PokemonOptionsBottomSheet(
+                                            pokemon: pokemon,
+                                            partyPokemonId:
+                                                filled.partyPokemonId,
+                                            canEvolve: slot.canEvolve,
+                                          ),
+                                        )
                                     : null,
                                 onLongPress: pokemon != null
-                                    ? () =>
-                                        _showDeleteDialog(context, ref, pokemon)
+                                    ? () => showDialog<void>(
+                                          context: context,
+                                          builder: (BuildContext context) =>
+                                              _DeleteConfirmationDialog(
+                                            pokemon: pokemon,
+                                          ),
+                                        )
                                     : null,
-                                onIncrementCounter: () => _incrementCounter(
-                                    ref, filled.partyPokemonId),
-                                onDecrementCounter: () => _decrementCounter(
-                                    ref, filled.partyPokemonId),
+                                onIncrementCounter: () async {
+                                  final result = await ref
+                                      .read(currentPartyStateProvider.notifier)
+                                      .incrementBreedingCounter(
+                                          filled.partyPokemonId);
+                                  result.when(
+                                    success: (_) => {},
+                                    failure: (failure) {
+                                      debugPrint(
+                                          'Failed to increment breeding counter: ${failure.message}');
+                                    },
+                                  );
+                                },
+                                onDecrementCounter: () async {
+                                  final result = await ref
+                                      .read(currentPartyStateProvider.notifier)
+                                      .decrementBreedingCounter(
+                                          filled.partyPokemonId);
+                                  result.when(
+                                    success: (_) => {},
+                                    failure: (failure) {
+                                      debugPrint(
+                                          'Failed to decrement breeding counter: ${failure.message}');
+                                    },
+                                  );
+                                },
                               );
                             } else {
                               return _EmptySlotCard(
@@ -145,188 +176,174 @@ class PartyPage extends HookConsumerWidget {
       ),
     );
   }
+}
 
-  /// 育成カウンターを増加させる。
-  void _incrementCounter(WidgetRef ref, int partyPokemonId) async {
-    final result = await ref
-        .read(currentPartyStateProvider.notifier)
-        .incrementBreedingCounter(partyPokemonId);
-    result.when(
-      success: (_) => {},
-      failure: (failure) {
-        debugPrint('Failed to increment breeding counter: ${failure.message}');
-      },
-    );
-  }
+/// ポケモンの操作オプションを表示するボトムシート
+class _PokemonOptionsBottomSheet extends HookConsumerWidget {
+  const _PokemonOptionsBottomSheet({
+    required this.pokemon,
+    required this.partyPokemonId,
+    required this.canEvolve,
+  });
 
-  /// 育成カウンターを減少させる。
-  void _decrementCounter(WidgetRef ref, int partyPokemonId) async {
-    final result = await ref
-        .read(currentPartyStateProvider.notifier)
-        .decrementBreedingCounter(partyPokemonId);
-    result.when(
-      success: (_) => {},
-      failure: (failure) {
-        debugPrint('Failed to decrement breeding counter: ${failure.message}');
-      },
-    );
-  }
+  final Pokemon pokemon;
+  final int partyPokemonId;
+  final bool canEvolve;
 
-  /// ポケモンの操作オプションを表示する。
-  void _showPokemonOptions(BuildContext context, WidgetRef ref, Pokemon pokemon,
-      int partyPokemonId, bool canEvolve) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text('詳細を見る'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: ポケモン詳細画面への遷移
-                },
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('詳細を見る'),
+            onTap: () {
+              Navigator.pop(context);
+              // TODO: ポケモン詳細画面への遷移
+            },
+          ),
+          if (canEvolve)
+            ListTile(
+              leading: Icon(
+                Icons.auto_awesome,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              if (canEvolve)
-                ListTile(
-                  leading: Icon(
-                    Icons.auto_awesome,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: Text(
-                    '進化する',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+              title: Text(
+                '進化する',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+
+                // 進化先のポケモンIDを取得
+                final evolutionTargetId =
+                    EvolutionDataHelper.getEvolutionTarget(pokemon.id);
+                if (evolutionTargetId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('進化先のポケモンが見つかりません'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // 進化先のポケモンデータを取得
+                final allPokemonsAsync = ref.read(pokemonStateProvider);
+                final allPokemons = allPokemonsAsync.valueOrNull ?? [];
+                final afterPokemon = allPokemons
+                    .where((p) => p.id == evolutionTargetId)
+                    .firstOrNull;
+
+                if (afterPokemon == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('進化先のポケモンデータが見つかりません'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // 進化確認画面に遷移
+                final params = EvolutionConfirmationParams(
+                  partyPokemonId: partyPokemonId,
+                  beforePokemon: pokemon,
+                  afterPokemon: afterPokemon,
+                );
+
+                context.push('/evolution-confirmation', extra: params);
+              },
+            ),
+          ListTile(
+            leading: const Icon(Icons.remove_circle),
+            title: const Text('パーティから外す'),
+            onTap: () {
+              Navigator.pop(context);
+              showDialog<void>(
+                context: context,
+                builder: (BuildContext context) => _DeleteConfirmationDialog(
+                  pokemon: pokemon,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ポケモンをパーティから削除する確認ダイアログ
+class _DeleteConfirmationDialog extends HookConsumerWidget {
+  const _DeleteConfirmationDialog({
+    required this.pokemon,
+  });
+
+  final Pokemon pokemon;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AlertDialog(
+      title: const Text('パーティから外す'),
+      content: Text('${pokemon.displayName} をパーティから外しますか？'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('キャンセル'),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.of(context).pop();
+            final result = await ref
+                .read(currentPartyStateProvider.notifier)
+                .removePokemonFromParty(pokemon.id);
+
+            result.when(
+              success: (_) {
+                // スナックバーで削除完了メッセージを表示
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${pokemon.displayName} をパーティから外しました'),
+                    duration: const Duration(seconds: 2),
+                    action: SnackBarAction(
+                      label: '取り消し',
+                      onPressed: () async {
+                        final addResult = await ref
+                            .read(currentPartyStateProvider.notifier)
+                            .addPokemonToParty(pokemon.id);
+                        addResult.when(
+                          success: (_) => {},
+                          failure: (failure) {
+                            debugPrint(
+                                'Failed to re-add pokemon: ${failure.message}');
+                          },
+                        );
+                      },
                     ),
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _startEvolution(context, ref, pokemon, partyPokemonId);
-                  },
-                ),
-              ListTile(
-                leading: const Icon(Icons.remove_circle),
-                title: const Text('パーティから外す'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteDialog(context, ref, pokemon);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// 進化処理を開始する。
-  void _startEvolution(BuildContext context, WidgetRef ref, Pokemon pokemon,
-      int partyPokemonId) {
-    // 進化先のポケモンIDを取得
-    final evolutionTargetId =
-        EvolutionDataHelper.getEvolutionTarget(pokemon.id);
-    if (evolutionTargetId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('進化先のポケモンが見つかりません'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // 進化先のポケモンデータを取得
-    final allPokemonsAsync = ref.read(pokemonStateProvider);
-    final allPokemons = allPokemonsAsync.valueOrNull ?? [];
-    final afterPokemon =
-        allPokemons.where((p) => p.id == evolutionTargetId).firstOrNull;
-
-    if (afterPokemon == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('進化先のポケモンデータが見つかりません'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // 進化確認画面に遷移
-    final params = EvolutionConfirmationParams(
-      partyPokemonId: partyPokemonId,
-      beforePokemon: pokemon,
-      afterPokemon: afterPokemon,
-    );
-
-    context.push('/evolution-confirmation', extra: params);
-  }
-
-  /// ポケモンをパーティから削除する確認ダイアログを表示する。
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, Pokemon pokemon) {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('パーティから外す'),
-          content: Text('${pokemon.displayName} をパーティから外しますか？'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('キャンセル'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                final result = await ref
-                    .read(currentPartyStateProvider.notifier)
-                    .removePokemonFromParty(pokemon.id);
-
-                result.when(
-                  success: (_) {
-                    // スナックバーで削除完了メッセージを表示
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${pokemon.displayName} をパーティから外しました'),
-                        duration: const Duration(seconds: 2),
-                        action: SnackBarAction(
-                          label: '取り消し',
-                          onPressed: () async {
-                            final addResult = await ref
-                                .read(currentPartyStateProvider.notifier)
-                                .addPokemonToParty(pokemon.id);
-                            addResult.when(
-                              success: (_) => {},
-                              failure: (failure) {
-                                debugPrint(
-                                    'Failed to re-add pokemon: ${failure.message}');
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                  failure: (failure) {
-                    // エラーメッセージを表示
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('エラー: ${failure.message}'),
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  },
                 );
               },
-              child: const Text('外す'),
-            ),
-          ],
-        );
-      },
+              failure: (failure) {
+                // エラーメッセージを表示
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('エラー: ${failure.message}'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              },
+            );
+          },
+          child: const Text('外す'),
+        ),
+      ],
     );
   }
 }

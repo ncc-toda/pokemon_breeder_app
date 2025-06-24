@@ -54,81 +54,76 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
             ),
             const Spacer(),
             _EvolutionActionButtons(
-              onCancel: () => _onCancel(context),
-              onConfirm: () => _onConfirm(context, ref),
+              onCancel: () => context.pop(),
+              onConfirm: () async {
+                try {
+                  // ローディング表示（必要に応じて）
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  // 進化処理を実行
+                  final evolutionUseCase =
+                      ref.read(evolvePokemonUseCaseProvider.notifier);
+                  final result =
+                      await evolutionUseCase.evolve(params.partyPokemonId);
+
+                  // ローディングを閉じる
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+
+                  result.when(
+                    success: (evolutionData) {
+                      // 進化成功：進化結果画面に遷移
+                      if (context.mounted) {
+                        context.pushReplacement('/evolution-result', extra: {
+                          'beforePokemon': params.beforePokemon,
+                          'afterPokemon': params.afterPokemon,
+                          'message': evolutionData.message,
+                        });
+                      }
+                    },
+                    failure: (failure) {
+                      // 進化失敗：エラーメッセージを表示
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(failure.message),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                } catch (error) {
+                  // ローディングを閉じる
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+
+                  // エラーメッセージを表示
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('進化処理中にエラーが発生しました: $error'),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  }
+                }
+              },
             ),
             const SizedBox(height: DsSpacing.l),
           ],
         ),
       ),
     );
-  }
-
-  /// キャンセルボタンがタップされた時の処理。
-  void _onCancel(BuildContext context) {
-    context.pop();
-  }
-
-  /// 承認ボタンがタップされた時の処理。
-  void _onConfirm(BuildContext context, WidgetRef ref) async {
-    try {
-      // ローディング表示（必要に応じて）
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      // 進化処理を実行
-      final evolutionUseCase = ref.read(evolvePokemonUseCaseProvider.notifier);
-      final result = await evolutionUseCase.evolve(params.partyPokemonId);
-
-      // ローディングを閉じる
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
-      result.when(
-        success: (evolutionData) {
-          // 進化成功：進化結果画面に遷移
-          if (context.mounted) {
-            context.pushReplacement('/evolution-result', extra: {
-              'beforePokemon': params.beforePokemon,
-              'afterPokemon': params.afterPokemon,
-              'message': evolutionData.message,
-            });
-          }
-        },
-        failure: (failure) {
-          // 進化失敗：エラーメッセージを表示
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(failure.message),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-          }
-        },
-      );
-    } catch (error) {
-      // ローディングを閉じる
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-
-      // エラーメッセージを表示
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('進化処理中にエラーが発生しました: $error'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
   }
 }
 
