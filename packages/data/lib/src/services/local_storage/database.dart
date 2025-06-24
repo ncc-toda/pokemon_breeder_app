@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:drift/web.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -146,8 +148,14 @@ class LocalDatabase extends _$LocalDatabase {
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
-    final Directory appDocDir = await getApplicationDocumentsDirectory();
-    final String dbPath = p.join(appDocDir.path, 'pokemon_breeder.db');
-    return NativeDatabase(File(dbPath));
+    if (kIsWeb) {
+      // Web環境ではIndexedDBを使用
+      return WebDatabase('pokemon_breeder_db');
+    } else {
+      // ネイティブ環境では従来のSQLiteファイルを使用
+      final Directory appDocDir = await getApplicationDocumentsDirectory();
+      final String dbPath = p.join(appDocDir.path, 'pokemon_breeder.db');
+      return NativeDatabase(File(dbPath));
+    }
   });
 }
