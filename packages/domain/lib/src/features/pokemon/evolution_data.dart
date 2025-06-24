@@ -1,6 +1,6 @@
 /// ポケモンの進化情報を管理するクラス。
-class EvolutionData {
-  const EvolutionData._();
+class EvolutionDataHelper {
+  const EvolutionDataHelper._();
 
   /// 進化マップ。キーは進化前のポケモンID、値は進化後のポケモンID。
   static const Map<int, int> _evolutionMap = {

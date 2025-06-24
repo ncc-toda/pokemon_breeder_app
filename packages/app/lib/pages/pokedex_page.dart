@@ -35,8 +35,14 @@ class PokedexPage extends HookConsumerWidget {
 
     // 初回読み込み
     useEffect(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        pokemonState.fetchInitialPokemons();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final result = await pokemonState.fetchInitialPokemons();
+        result.when(
+          success: (_) => {}, // 成功時は特に何もしない
+          failure: (failure) {
+            debugPrint('Initial pokemon fetch failed: ${failure.message}');
+          },
+        );
       });
       return null;
     }, []);
@@ -53,11 +59,17 @@ class PokedexPage extends HookConsumerWidget {
             scrollController.position.maxScrollExtent - 200) {
           if (!isLoadingMore.value && pokemonAsyncValue.hasValue) {
             isLoadingMore.value = true;
-            pokemonState.fetchNextPage().then((_) {
+            pokemonState.fetchNextPage().then((result) {
               isLoadingMore.value = false;
+              result.when(
+                success: (_) => {}, // 成功時は特に何もしない
+                failure: (failure) {
+                  debugPrint('Error loading more pokemons: ${failure.message}');
+                },
+              );
             }).catchError((error) {
               isLoadingMore.value = false;
-              debugPrint('Error loading more pokemons: $error');
+              debugPrint('Unexpected error during fetch next page: $error');
             });
           }
         }
@@ -124,7 +136,15 @@ class PokedexPage extends HookConsumerWidget {
               loading: () => const _PokemonListShimmer(),
               error: (error, stackTrace) => _PokemonListErrorView(
                 error: error,
-                onRetry: () => pokemonState.retry(),
+                onRetry: () async {
+                  final result = await pokemonState.retry();
+                  result.when(
+                    success: (_) => {}, // 成功時は特に何もしない
+                    failure: (failure) {
+                      debugPrint('Retry failed: ${failure.message}');
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -384,23 +404,43 @@ class _PokemonListItem extends ConsumerWidget {
   }
 
   /// ポケモンをパーティに追加する。
-  void _addToParty(BuildContext context, WidgetRef ref, Pokemon pokemon) {
-    ref.read(currentPartyStateProvider.notifier).addPokemonToParty(pokemon.id);
-
-    // スナックバーで成功メッセージを表示
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${pokemon.displayName} をパーティに追加しました'),
-        duration: const Duration(seconds: 2),
-        action: SnackBarAction(
-          label: '取り消し',
-          onPressed: () {
-            ref
-                .read(currentPartyStateProvider.notifier)
-                .removePokemonFromParty(pokemon.id);
-          },
-        ),
-      ),
+  void _addToParty(BuildContext context, WidgetRef ref, Pokemon pokemon) async {
+    final result = await ref.read(currentPartyStateProvider.notifier).addPokemonToParty(pokemon.id);
+    
+    result.when(
+      success: (updatedParty) {
+        // スナックバーで成功メッセージを表示
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${pokemon.displayName} をパーティに追加しました'),
+            duration: const Duration(seconds: 2),
+            action: SnackBarAction(
+              label: '取り消し',
+              onPressed: () async {
+                final removeResult = await ref
+                    .read(currentPartyStateProvider.notifier)
+                    .removePokemonFromParty(pokemon.id);
+                removeResult.when(
+                  success: (_) => {},
+                  failure: (failure) {
+                    debugPrint('Failed to remove pokemon: ${failure.message}');
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+      failure: (failure) {
+        // エラーメッセージを表示
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('エラー: ${failure.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      },
     );
   }
 }

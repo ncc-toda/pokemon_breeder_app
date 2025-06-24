@@ -29,9 +29,17 @@ class PartyPage extends HookConsumerWidget {
                     children: [
                       Text('エラーが発生しました: $error'),
                       ElevatedButton(
-                        onPressed: () => ref
-                            .read(currentPartyStateProvider.notifier)
-                            .reload(),
+                        onPressed: () async {
+                          final result = await ref
+                              .read(currentPartyStateProvider.notifier)
+                              .reload();
+                          result.when(
+                            success: (_) => {},
+                            failure: (failure) {
+                              debugPrint('Failed to reload party: ${failure.message}');
+                            },
+                          );
+                        },
                         child: const Text('再試行'),
                       ),
                     ],
@@ -44,7 +52,7 @@ class PartyPage extends HookConsumerWidget {
 
                   final allPokemons = allPokemonsAsync.valueOrNull ?? [];
 
-                  return FutureBuilder<List<PartySlot>>(
+                  return FutureBuilder<Result<List<PartySlot>, DomainFailure>>(
                     future: ref
                         .read(currentPartyStateProvider.notifier)
                         .getPartySlots(),
@@ -53,7 +61,13 @@ class PartyPage extends HookConsumerWidget {
                         return const Center(child: CircularProgressIndicator());
                       }
 
-                      final partySlots = snapshot.data ?? [];
+                      final partySlots = snapshot.data?.when(
+                        success: (slots) => slots,
+                        failure: (failure) {
+                          debugPrint('Failed to get party slots: ${failure.message}');
+                          return <PartySlot>[];
+                        },
+                      ) ?? [];
 
                       return GridView.builder(
                         padding: DsPadding.allS,
@@ -130,17 +144,29 @@ class PartyPage extends HookConsumerWidget {
   }
 
   /// 育成カウンターを増加させる。
-  void _incrementCounter(WidgetRef ref, int partyPokemonId) {
-    ref
+  void _incrementCounter(WidgetRef ref, int partyPokemonId) async {
+    final result = await ref
         .read(currentPartyStateProvider.notifier)
         .incrementBreedingCounter(partyPokemonId);
+    result.when(
+      success: (_) => {},
+      failure: (failure) {
+        debugPrint('Failed to increment breeding counter: ${failure.message}');
+      },
+    );
   }
 
   /// 育成カウンターを減少させる。
-  void _decrementCounter(WidgetRef ref, int partyPokemonId) {
-    ref
+  void _decrementCounter(WidgetRef ref, int partyPokemonId) async {
+    final result = await ref
         .read(currentPartyStateProvider.notifier)
         .decrementBreedingCounter(partyPokemonId);
+    result.when(
+      success: (_) => {},
+      failure: (failure) {
+        debugPrint('Failed to decrement breeding counter: ${failure.message}');
+      },
+    );
   }
 
   /// ポケモンの操作オプションを表示する。
@@ -249,26 +275,46 @@ class PartyPage extends HookConsumerWidget {
               child: const Text('キャンセル'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                ref
+                final result = await ref
                     .read(currentPartyStateProvider.notifier)
                     .removePokemonFromParty(pokemon.id);
 
-                // スナックバーで削除完了メッセージを表示
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${pokemon.displayName} をパーティから外しました'),
-                    duration: const Duration(seconds: 2),
-                    action: SnackBarAction(
-                      label: '取り消し',
-                      onPressed: () {
-                        ref
-                            .read(currentPartyStateProvider.notifier)
-                            .addPokemonToParty(pokemon.id);
-                      },
-                    ),
-                  ),
+                result.when(
+                  success: (_) {
+                    // スナックバーで削除完了メッセージを表示
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${pokemon.displayName} をパーティから外しました'),
+                        duration: const Duration(seconds: 2),
+                        action: SnackBarAction(
+                          label: '取り消し',
+                          onPressed: () async {
+                            final addResult = await ref
+                                .read(currentPartyStateProvider.notifier)
+                                .addPokemonToParty(pokemon.id);
+                            addResult.when(
+                              success: (_) => {},
+                              failure: (failure) {
+                                debugPrint('Failed to re-add pokemon: ${failure.message}');
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  failure: (failure) {
+                    // エラーメッセージを表示
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('エラー: ${failure.message}'),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  },
                 );
               },
               child: const Text('外す'),

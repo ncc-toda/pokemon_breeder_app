@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/core.dart';
 import 'party.dart';
 
 part 'party_state.g.dart';
@@ -30,33 +31,72 @@ class PartyListState extends _$PartyListState {
     }
   }
 
+  /// パーティ一覧を読み込んでResult型で返す。
+  Future<Result<List<Party>, DomainFailure>> _loadPartiesWithResult() async {
+    try {
+      final partyService = ref.read(partyServiceProvider);
+      final parties = await partyService.getAllParties();
+      state = AsyncValue.data(parties);
+      return Success(parties);
+    } catch (error, stackTrace) {
+      final failure = DomainFailure.dataFetchFailed(
+        message: 'パーティ一覧の取得に失敗しました',
+        cause: error,
+      );
+      state = AsyncValue.error(error, stackTrace);
+      debugPrint('Failed to load parties: $error');
+      return Failure(failure);
+    }
+  }
+
   /// パーティ一覧を再読み込みする。
-  Future<void> reload() async {
+  Future<Result<List<Party>, DomainFailure>> reload() async {
     state = const AsyncValue.loading();
-    await _loadParties();
+    return await _loadPartiesWithResult();
   }
 
   /// 新しいパーティを作成する。
-  Future<void> createParty(String name) async {
+  Future<Result<Party, DomainFailure>> createParty(String name) async {
     try {
       final partyService = ref.read(partyServiceProvider);
       await partyService.createParty(name);
-      await _loadParties();
+      final result = await _loadPartiesWithResult();
+      return result.when(
+        success: (parties) {
+          final newParty = parties.firstWhere(
+            (p) => p.name == name,
+            orElse: () => parties.last,
+          );
+          return Success(newParty);
+        },
+        failure: (failure) => Failure(failure),
+      );
     } catch (error, stackTrace) {
+      final failure = DomainFailure.dataSaveFailed(
+        message: 'パーティの作成に失敗しました',
+        cause: error,
+      );
       state = AsyncValue.error(error, stackTrace);
       debugPrint('Failed to create party: $error');
+      return Failure(failure);
     }
   }
 
   /// パーティを削除する。
-  Future<void> deleteParty(int partyId) async {
+  Future<Result<void, DomainFailure>> deleteParty(int partyId) async {
     try {
       final partyService = ref.read(partyServiceProvider);
       await partyService.deleteParty(partyId);
       await _loadParties();
+      return const Success(null);
     } catch (error, stackTrace) {
+      final failure = DomainFailure.dataDeleteFailed(
+        message: 'パーティの削除に失敗しました',
+        cause: error,
+      );
       state = AsyncValue.error(error, stackTrace);
       debugPrint('Failed to delete party: $error');
+      return Failure(failure);
     }
   }
 }
@@ -90,24 +130,74 @@ class CurrentPartyState extends _$CurrentPartyState {
     }
   }
 
+  /// 現在のパーティを読み込んでResult型で返す。
+  Future<Result<Party?, DomainFailure>> _loadCurrentPartyWithResult() async {
+    try {
+      final partyService = ref.read(partyServiceProvider);
+      final parties = await partyService.getAllParties();
+
+      if (parties.isNotEmpty) {
+        state = AsyncValue.data(parties.first);
+        return Success(parties.first);
+      } else {
+        // パーティが存在しない場合はデフォルトパーティを作成
+        await partyService.createParty('マイパーティ');
+        final newParties = await partyService.getAllParties();
+        if (newParties.isNotEmpty) {
+          state = AsyncValue.data(newParties.first);
+          return Success(newParties.first);
+        } else {
+          final failure = DomainFailure.unexpected(
+            message: 'デフォルトパーティの作成に失敗しました',
+          );
+          return Failure(failure);
+        }
+      }
+    } catch (error, stackTrace) {
+      final failure = DomainFailure.dataFetchFailed(
+        message: '現在のパーティの取得に失敗しました',
+        cause: error,
+      );
+      state = AsyncValue.error(error, stackTrace);
+      debugPrint('Failed to load current party: $error');
+      return Failure(failure);
+    }
+  }
+
   /// パーティを選択する。
-  Future<void> selectParty(int partyId) async {
+  Future<Result<Party, DomainFailure>> selectParty(int partyId) async {
     try {
       final partyService = ref.read(partyServiceProvider);
       final party = await partyService.getPartyById(partyId);
       if (party != null) {
         state = AsyncValue.data(party);
+        return Success(party);
+      } else {
+        final failure = DomainFailure.notFound(
+          message: '指定されたパーティが見つかりません',
+        );
+        return Failure(failure);
       }
     } catch (error, stackTrace) {
+      final failure = DomainFailure.dataFetchFailed(
+        message: 'パーティの選択に失敗しました',
+        cause: error,
+      );
       state = AsyncValue.error(error, stackTrace);
       debugPrint('Failed to select party: $error');
+      return Failure(failure);
     }
   }
 
   /// パーティにポケモンを追加する。
-  Future<void> addPokemonToParty(int pokemonId) async {
+  Future<Result<Party, DomainFailure>> addPokemonToParty(int pokemonId) async {
     final currentParty = state.valueOrNull;
-    if (currentParty == null) return;
+    if (currentParty == null) {
+      final failure = DomainFailure.notFound(
+        message: '選択されたパーティが見つかりません',
+      );
+      return Failure(failure);
+    }
 
     try {
       final partyService = ref.read(partyServiceProvider);
@@ -129,16 +219,27 @@ class CurrentPartyState extends _$CurrentPartyState {
       );
       
       state = AsyncValue.data(updatedParty);
+      return Success(updatedParty);
     } catch (error, stackTrace) {
+      final failure = DomainFailure.dataSaveFailed(
+        message: 'パーティへのポケモン追加に失敗しました',
+        cause: error,
+      );
       state = AsyncValue.error(error, stackTrace);
       debugPrint('Failed to add pokemon to party: $error');
+      return Failure(failure);
     }
   }
 
   /// パーティからポケモンを削除する。
-  Future<void> removePokemonFromParty(int pokemonId) async {
+  Future<Result<Party, DomainFailure>> removePokemonFromParty(int pokemonId) async {
     final currentParty = state.valueOrNull;
-    if (currentParty == null) return;
+    if (currentParty == null) {
+      final failure = DomainFailure.notFound(
+        message: '選択されたパーティが見つかりません',
+      );
+      return Failure(failure);
+    }
 
     try {
       final partyService = ref.read(partyServiceProvider);
@@ -157,17 +258,26 @@ class CurrentPartyState extends _$CurrentPartyState {
       }
       
       state = AsyncValue.data(updatedParty);
+      return Success(updatedParty);
     } catch (error, stackTrace) {
+      final failure = DomainFailure.dataDeleteFailed(
+        message: 'パーティからのポケモン削除に失敗しました',
+        cause: error,
+      );
       state = AsyncValue.error(error, stackTrace);
       debugPrint('Failed to remove pokemon from party: $error');
+      return Failure(failure);
     }
   }
 
   /// パーティの6スロット情報を取得する（育成カウンター情報を含む）。
-  Future<List<PartySlot>> getPartySlots() async {
+  Future<Result<List<PartySlot>, DomainFailure>> getPartySlots() async {
     final currentParty = state.valueOrNull;
     if (currentParty == null) {
-      return List.generate(6, (index) => PartySlot.empty(position: index));
+      final failure = DomainFailure.notFound(
+        message: '選択されたパーティが見つかりません',
+      );
+      return Failure(failure);
     }
 
     try {
@@ -194,15 +304,19 @@ class CurrentPartyState extends _$CurrentPartyState {
         slots.add(PartySlot.empty(position: i));
       }
 
-      return slots;
+      return Success(slots);
     } catch (error) {
+      final failure = DomainFailure.dataFetchFailed(
+        message: 'パーティスロット情報の取得に失敗しました',
+        cause: error,
+      );
       debugPrint('Failed to get party slots: $error');
-      return List.generate(6, (index) => PartySlot.empty(position: index));
+      return Failure(failure);
     }
   }
 
   /// 育成カウンターを増加させる。
-  Future<void> incrementBreedingCounter(int partyPokemonId) async {
+  Future<Result<void, DomainFailure>> incrementBreedingCounter(int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
       final partyPokemon = await (database.select(database.partyPokemons)
@@ -214,14 +328,25 @@ class CurrentPartyState extends _$CurrentPartyState {
           partyPokemonId,
           partyPokemon.breedingCounter + 1,
         );
+        return const Success(null);
+      } else {
+        final failure = DomainFailure.notFound(
+          message: '指定されたパーティポケモンが見つかりません',
+        );
+        return Failure(failure);
       }
     } catch (error, _) {
+      final failure = DomainFailure.dataSaveFailed(
+        message: '育成カウンターの増加に失敗しました',
+        cause: error,
+      );
       debugPrint('Failed to increment breeding counter: $error');
+      return Failure(failure);
     }
   }
 
   /// 育成カウンターを減少させる。
-  Future<void> decrementBreedingCounter(int partyPokemonId) async {
+  Future<Result<void, DomainFailure>> decrementBreedingCounter(int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
       final partyPokemon = await (database.select(database.partyPokemons)
@@ -233,36 +358,70 @@ class CurrentPartyState extends _$CurrentPartyState {
           partyPokemonId,
           partyPokemon.breedingCounter - 1,
         );
+        return const Success(null);
+      } else if (partyPokemon != null) {
+        final failure = DomainFailure.validationError(
+          message: '育成カウンターは0以下には設定できません',
+        );
+        return Failure(failure);
+      } else {
+        final failure = DomainFailure.notFound(
+          message: '指定されたパーティポケモンが見つかりません',
+        );
+        return Failure(failure);
       }
     } catch (error, _) {
+      final failure = DomainFailure.dataSaveFailed(
+        message: '育成カウンターの減少に失敗しました',
+        cause: error,
+      );
       debugPrint('Failed to decrement breeding counter: $error');
+      return Failure(failure);
     }
   }
 
   /// 育成カウンターをリセットする。
-  Future<void> resetBreedingCounter(int partyPokemonId) async {
+  Future<Result<void, DomainFailure>> resetBreedingCounter(int partyPokemonId) async {
     try {
       final database = ref.read(localDatabaseProvider);
       await database.updateBreedingCounter(partyPokemonId, 0);
+      return const Success(null);
     } catch (error, _) {
+      final failure = DomainFailure.dataSaveFailed(
+        message: '育成カウンターのリセットに失敗しました',
+        cause: error,
+      );
       debugPrint('Failed to reset breeding counter: $error');
+      return Failure(failure);
     }
   }
 
   /// 育成カウンターを指定値に設定する。
-  Future<void> setBreedingCounter(int partyPokemonId, int value) async {
+  Future<Result<void, DomainFailure>> setBreedingCounter(int partyPokemonId, int value) async {
+    if (value < 0) {
+      final failure = DomainFailure.validationError(
+        message: '育成カウンターには0以上の値を設定してください',
+      );
+      return Failure(failure);
+    }
+
     try {
       final database = ref.read(localDatabaseProvider);
-      await database.updateBreedingCounter(
-          partyPokemonId, value < 0 ? 0 : value);
+      await database.updateBreedingCounter(partyPokemonId, value);
+      return const Success(null);
     } catch (error, _) {
+      final failure = DomainFailure.dataSaveFailed(
+        message: '育成カウンターの設定に失敗しました',
+        cause: error,
+      );
       debugPrint('Failed to set breeding counter: $error');
+      return Failure(failure);
     }
   }
 
   /// 現在のパーティを再読み込みする。
-  Future<void> reload() async {
+  Future<Result<Party?, DomainFailure>> reload() async {
     state = const AsyncValue.loading();
-    await _loadCurrentParty();
+    return await _loadCurrentPartyWithResult();
   }
 }
