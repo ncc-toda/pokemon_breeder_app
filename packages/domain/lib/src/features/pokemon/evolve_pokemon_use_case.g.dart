@@ -7,15 +7,15 @@ part of 'evolve_pokemon_use_case.dart';
 // **************************************************************************
 
 String _$evolvePokemonUseCaseHash() =>
-    r'6fdbd5cbfc2ca7aac0d35249ea9bef3c5a9ef554';
+    r'1d54a50c505d5d033d0aa2b5148c5c886f3c9cad';
 
-/// ポケモンの進化処理を実行するUseCase。
+/// EvolvePokemonUseCaseのProvider。
 ///
-/// Copied from [EvolvePokemonUseCase].
-@ProviderFor(EvolvePokemonUseCase)
+/// Copied from [evolvePokemonUseCase].
+@ProviderFor(evolvePokemonUseCase)
 final evolvePokemonUseCaseProvider =
-    AutoDisposeNotifierProvider<EvolvePokemonUseCase, void>.internal(
-  EvolvePokemonUseCase.new,
+    AutoDisposeProvider<EvolvePokemonUseCase>.internal(
+  evolvePokemonUseCase,
   name: r'evolvePokemonUseCaseProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
@@ -24,6 +24,8 @@ final evolvePokemonUseCaseProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$EvolvePokemonUseCase = AutoDisposeNotifier<void>;
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef EvolvePokemonUseCaseRef = AutoDisposeProviderRef<EvolvePokemonUseCase>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

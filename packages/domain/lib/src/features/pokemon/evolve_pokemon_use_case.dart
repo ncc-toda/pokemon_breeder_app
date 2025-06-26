@@ -1,5 +1,7 @@
+import 'package:data/src/services/local_storage/database.dart';
 import 'package:data/src/services/local_storage/local_database_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/core.dart';
@@ -30,12 +32,10 @@ class EvolutionData {
 }
 
 /// ポケモンの進化処理を実行するUseCase。
-@riverpod
-class EvolvePokemonUseCase extends _$EvolvePokemonUseCase {
-  @override
-  void build() {
-    // このUseCaseは状態を持たない
-  }
+class EvolvePokemonUseCase {
+  const EvolvePokemonUseCase(this._localDatabase);
+
+  final LocalDatabase _localDatabase;
 
   /// 指定されたパーティポケモンを進化させる。
   ///
@@ -47,7 +47,7 @@ class EvolvePokemonUseCase extends _$EvolvePokemonUseCase {
       debugPrint(
           'EvolvePokemonUseCase.evolve: Starting evolution for partyPokemonId=$partyPokemonId');
 
-      final database = ref.read(localDatabaseProvider);
+      final database = _localDatabase;
 
       // パーティポケモンの情報を取得
       final partyPokemon = await (database.select(database.partyPokemons)
@@ -127,7 +127,7 @@ class EvolvePokemonUseCase extends _$EvolvePokemonUseCase {
       debugPrint(
           'EvolvePokemonUseCase.devolve: Starting devolution for partyPokemonId=$partyPokemonId');
 
-      final database = ref.read(localDatabaseProvider);
+      final database = _localDatabase;
 
       // パーティポケモンの情報を取得
       final partyPokemon = await (database.select(database.partyPokemons)
@@ -209,4 +209,11 @@ class EvolvePokemonUseCase extends _$EvolvePokemonUseCase {
   static int? checkDevolutionPossibility(int pokemonId) {
     return EvolutionDataHelper.getDevolutionTarget(pokemonId);
   }
+}
+
+/// EvolvePokemonUseCaseのProvider。
+@riverpod
+EvolvePokemonUseCase evolvePokemonUseCase(Ref ref) {
+  final localDatabase = ref.read(localDatabaseProvider);
+  return EvolvePokemonUseCase(localDatabase);
 }
