@@ -112,11 +112,14 @@ class PartyPage extends HookConsumerWidget {
                                                 partyPokemonId:
                                                     filled.partyPokemonId,
                                                 canEvolve: slot.canEvolve,
-                                                onDeleteConfirm: () => showDialog<void>(
+                                                onDeleteConfirm: () =>
+                                                    showDialog<void>(
                                                   context: context,
-                                                  builder: (BuildContext context) =>
+                                                  builder: (BuildContext
+                                                          context) =>
                                                       DeleteConfirmationDialog(
-                                                    config: DeleteConfirmationConfig(
+                                                    config:
+                                                        DeleteConfirmationConfig(
                                                       pokemon: pokemon,
                                                     ),
                                                   ),
@@ -138,7 +141,8 @@ class PartyPage extends HookConsumerWidget {
                                       : null,
                                   onIncrementCounter: () async {
                                     final result = await ref
-                                        .read(currentPartyStateProvider.notifier)
+                                        .read(
+                                            currentPartyStateProvider.notifier)
                                         .incrementBreedingCounter(
                                             filled.partyPokemonId);
                                     result.when(
@@ -151,7 +155,8 @@ class PartyPage extends HookConsumerWidget {
                                   },
                                   onDecrementCounter: () async {
                                     final result = await ref
-                                        .read(currentPartyStateProvider.notifier)
+                                        .read(
+                                            currentPartyStateProvider.notifier)
                                         .decrementBreedingCounter(
                                             filled.partyPokemonId);
                                     result.when(
@@ -195,4 +200,3 @@ class PartyPage extends HookConsumerWidget {
     );
   }
 }
-

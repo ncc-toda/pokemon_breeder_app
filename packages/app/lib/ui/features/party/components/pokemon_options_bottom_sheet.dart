@@ -1,4 +1,3 @@
-import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -97,9 +96,8 @@ class PokemonOptionsBottomSheet extends HookConsumerWidget {
     // 進化先のポケモンデータを取得
     final allPokemonsAsync = ref.read(pokemonStateProvider);
     final allPokemons = allPokemonsAsync.valueOrNull ?? [];
-    final afterPokemon = allPokemons
-        .where((p) => p.id == evolutionTargetId)
-        .firstOrNull;
+    final afterPokemon =
+        allPokemons.where((p) => p.id == evolutionTargetId).firstOrNull;
 
     if (afterPokemon == null) {
       ScaffoldMessenger.of(context).showSnackBar(
