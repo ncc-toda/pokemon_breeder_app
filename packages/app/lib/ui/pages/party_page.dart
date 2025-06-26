@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:domain/domain.dart';
-import 'package:pokemon_breeder_app/ui/pages/evolution_confirmation_page.dart';
+import 'package:pokemon_breeder_app/ui/features/party/components/pokemon_card.dart';
+import 'package:pokemon_breeder_app/ui/features/party/components/empty_slot_card.dart';
+import 'package:pokemon_breeder_app/ui/features/party/components/pokemon_options_bottom_sheet.dart';
+import 'package:pokemon_breeder_app/ui/features/party/components/delete_confirmation_dialog.dart';
 
 class PartyPage extends HookConsumerWidget {
   const PartyPage({super.key});
@@ -92,67 +95,87 @@ class PartyPage extends HookConsumerWidget {
                               final pokemon = allPokemons
                                   .where((p) => p.id == filled.pokemonId)
                                   .firstOrNull;
-                              return _PokemonCard(
-                                pokemon: pokemon,
-                                partyPokemonId: filled.partyPokemonId,
-                                breedingCounter: filled.breedingCounter,
-                                canEvolve: slot.canEvolve,
-                                progressPercentage: slot.progressPercentage,
-                                onTap: pokemon != null
-                                    ? () => showModalBottomSheet<void>(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              _PokemonOptionsBottomSheet(
-                                            pokemon: pokemon,
-                                            partyPokemonId:
-                                                filled.partyPokemonId,
-                                            canEvolve: slot.canEvolve,
-                                          ),
-                                        )
-                                    : null,
-                                onLongPress: pokemon != null
-                                    ? () => showDialog<void>(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              _DeleteConfirmationDialog(
-                                            pokemon: pokemon,
-                                          ),
-                                        )
-                                    : null,
-                                onIncrementCounter: () async {
-                                  final result = await ref
-                                      .read(currentPartyStateProvider.notifier)
-                                      .incrementBreedingCounter(
-                                          filled.partyPokemonId);
-                                  result.when(
-                                    success: (_) => {},
-                                    failure: (failure) {
-                                      debugPrint(
-                                          'Failed to increment breeding counter: ${failure.message}');
-                                    },
-                                  );
-                                },
-                                onDecrementCounter: () async {
-                                  final result = await ref
-                                      .read(currentPartyStateProvider.notifier)
-                                      .decrementBreedingCounter(
-                                          filled.partyPokemonId);
-                                  result.when(
-                                    success: (_) => {},
-                                    failure: (failure) {
-                                      debugPrint(
-                                          'Failed to decrement breeding counter: ${failure.message}');
-                                    },
-                                  );
-                                },
+                              return PokemonCard(
+                                config: PokemonCardConfig(
+                                  pokemon: pokemon,
+                                  partyPokemonId: filled.partyPokemonId,
+                                  breedingCounter: filled.breedingCounter,
+                                  canEvolve: slot.canEvolve,
+                                  progressPercentage: slot.progressPercentage,
+                                  onTap: pokemon != null
+                                      ? () => showModalBottomSheet<void>(
+                                            context: context,
+                                            builder: (BuildContext context) =>
+                                                PokemonOptionsBottomSheet(
+                                              config: PokemonOptionsConfig(
+                                                pokemon: pokemon,
+                                                partyPokemonId:
+                                                    filled.partyPokemonId,
+                                                canEvolve: slot.canEvolve,
+                                                onDeleteConfirm: () =>
+                                                    showDialog<void>(
+                                                  context: context,
+                                                  builder: (BuildContext
+                                                          context) =>
+                                                      DeleteConfirmationDialog(
+                                                    config:
+                                                        DeleteConfirmationConfig(
+                                                      pokemon: pokemon,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                      : null,
+                                  onLongPress: pokemon != null
+                                      ? () => showDialog<void>(
+                                            context: context,
+                                            builder: (BuildContext context) =>
+                                                DeleteConfirmationDialog(
+                                              config: DeleteConfirmationConfig(
+                                                pokemon: pokemon,
+                                              ),
+                                            ),
+                                          )
+                                      : null,
+                                  onIncrementCounter: () async {
+                                    final result = await ref
+                                        .read(
+                                            currentPartyStateProvider.notifier)
+                                        .incrementBreedingCounter(
+                                            filled.partyPokemonId);
+                                    result.when(
+                                      success: (_) => {},
+                                      failure: (failure) {
+                                        debugPrint(
+                                            'Failed to increment breeding counter: ${failure.message}');
+                                      },
+                                    );
+                                  },
+                                  onDecrementCounter: () async {
+                                    final result = await ref
+                                        .read(
+                                            currentPartyStateProvider.notifier)
+                                        .decrementBreedingCounter(
+                                            filled.partyPokemonId);
+                                    result.when(
+                                      success: (_) => {},
+                                      failure: (failure) {
+                                        debugPrint(
+                                            'Failed to decrement breeding counter: ${failure.message}');
+                                      },
+                                    );
+                                  },
+                                ),
                               );
                             } else {
-                              return _EmptySlotCard(
+                              return EmptySlotCard(
                                 onTap: () => context.go('/pokedex'),
                               );
                             }
                           } else {
-                            return _EmptySlotCard(
+                            return EmptySlotCard(
                               onTap: () => context.go('/pokedex'),
                             );
                           }
@@ -173,417 +196,6 @@ class PartyPage extends HookConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// ポケモンの操作オプションを表示するボトムシート
-class _PokemonOptionsBottomSheet extends HookConsumerWidget {
-  const _PokemonOptionsBottomSheet({
-    required this.pokemon,
-    required this.partyPokemonId,
-    required this.canEvolve,
-  });
-
-  final Pokemon pokemon;
-  final int partyPokemonId;
-  final bool canEvolve;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: const Text('詳細を見る'),
-            onTap: () {
-              Navigator.pop(context);
-              // TODO: ポケモン詳細画面への遷移
-            },
-          ),
-          if (canEvolve)
-            ListTile(
-              leading: Icon(
-                Icons.auto_awesome,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(
-                '進化する',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-
-                // 進化先のポケモンIDを取得
-                final evolutionTargetId =
-                    EvolutionDataHelper.getEvolutionTarget(pokemon.id);
-                if (evolutionTargetId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('進化先のポケモンが見つかりません'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                // 進化先のポケモンデータを取得
-                final allPokemonsAsync = ref.read(pokemonStateProvider);
-                final allPokemons = allPokemonsAsync.valueOrNull ?? [];
-                final afterPokemon = allPokemons
-                    .where((p) => p.id == evolutionTargetId)
-                    .firstOrNull;
-
-                if (afterPokemon == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('進化先のポケモンデータが見つかりません'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                // 進化確認画面に遷移
-                final params = EvolutionConfirmationParams(
-                  partyPokemonId: partyPokemonId,
-                  beforePokemon: pokemon,
-                  afterPokemon: afterPokemon,
-                );
-
-                context.push('/evolution-confirmation', extra: params);
-              },
-            ),
-          ListTile(
-            leading: const Icon(Icons.remove_circle),
-            title: const Text('パーティから外す'),
-            onTap: () {
-              Navigator.pop(context);
-              showDialog<void>(
-                context: context,
-                builder: (BuildContext context) => _DeleteConfirmationDialog(
-                  pokemon: pokemon,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// ポケモンをパーティから削除する確認ダイアログ
-class _DeleteConfirmationDialog extends HookConsumerWidget {
-  const _DeleteConfirmationDialog({
-    required this.pokemon,
-  });
-
-  final Pokemon pokemon;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return AlertDialog(
-      title: const Text('パーティから外す'),
-      content: Text('${pokemon.displayName} をパーティから外しますか？'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('キャンセル'),
-        ),
-        TextButton(
-          onPressed: () async {
-            Navigator.of(context).pop();
-            final result = await ref
-                .read(currentPartyStateProvider.notifier)
-                .removePokemonFromParty(pokemon.id);
-
-            result.when(
-              success: (_) {
-                // スナックバーで削除完了メッセージを表示
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${pokemon.displayName} をパーティから外しました'),
-                    duration: const Duration(seconds: 2),
-                    action: SnackBarAction(
-                      label: '取り消し',
-                      onPressed: () async {
-                        final addResult = await ref
-                            .read(currentPartyStateProvider.notifier)
-                            .addPokemonToParty(pokemon.id);
-                        addResult.when(
-                          success: (_) => {},
-                          failure: (failure) {
-                            debugPrint(
-                                'Failed to re-add pokemon: ${failure.message}');
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
-              failure: (failure) {
-                // エラーメッセージを表示
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('エラー: ${failure.message}'),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              },
-            );
-          },
-          child: const Text('外す'),
-        ),
-      ],
-    );
-  }
-}
-
-class _PokemonCard extends StatelessWidget {
-  const _PokemonCard({
-    required this.pokemon,
-    this.partyPokemonId,
-    this.breedingCounter = 0,
-    this.canEvolve = false,
-    this.progressPercentage = 0,
-    this.onTap,
-    this.onLongPress,
-    this.onIncrementCounter,
-    this.onDecrementCounter,
-  });
-
-  final Pokemon? pokemon;
-  final int? partyPokemonId;
-  final int breedingCounter;
-  final bool canEvolve;
-  final int progressPercentage;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-  final VoidCallback? onIncrementCounter;
-  final VoidCallback? onDecrementCounter;
-
-  @override
-  Widget build(BuildContext context) {
-    if (pokemon == null) {
-      return Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DsRadius.xl),
-        ),
-        child: const Padding(
-          padding: DsPadding.allS,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error, size: DsDimension.iconSizeXxl),
-              SizedBox(height: DsSpacing.s),
-              Text('データなし', style: DsTypography.titleSmall),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DsRadius.xl),
-        side: canEvolve
-            ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
-            : BorderSide.none,
-      ),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(DsRadius.xl),
-        child: Padding(
-          padding: DsPadding.allS,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // ポケモン画像とプログレスバー
-              Expanded(
-                flex: 3,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(DsRadius.m),
-                        child: Image.network(
-                          pokemon!.imageUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(DsRadius.m),
-                              ),
-                              child: Icon(
-                                Icons.catching_pokemon,
-                                size: DsDimension.iconSizeL,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: DsSpacing.xs),
-                    // プログレスバー
-                    LinearProgressIndicator(
-                      value: progressPercentage / 100.0,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        canEvolve
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ポケモン名
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: DsSpacing.xs),
-                child: Text(
-                  pokemon!.displayName,
-                  style: DsTypography.bodySmall,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-              // 育成カウンター操作部分
-              Expanded(
-                flex: 1,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // マイナスボタン
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        onPressed:
-                            breedingCounter > 0 ? onDecrementCounter : null,
-                        icon: const Icon(Icons.remove, size: 16),
-                        style: IconButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.surface,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-
-                    // カウンター表示
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$breedingCounter',
-                          style: DsTypography.titleMedium.copyWith(
-                            color: canEvolve
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (canEvolve)
-                          Icon(
-                            Icons.star,
-                            size: 12,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                      ],
-                    ),
-
-                    // プラスボタン
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        onPressed: onIncrementCounter,
-                        icon: const Icon(Icons.add, size: 16),
-                        style: IconButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.surface,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptySlotCard extends StatelessWidget {
-  const _EmptySlotCard({
-    required this.onTap,
-  });
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DsRadius.xl),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline,
-          width: 2,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DsRadius.xl),
-        child: Padding(
-          padding: DsPadding.allS,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.add_circle_outline,
-                size: DsDimension.iconSizeXxl,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: DsSpacing.s),
-              Text(
-                'ポケモンを追加',
-                style: DsTypography.titleSmall.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
