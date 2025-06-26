@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:domain/domain.dart';
-import 'package:pokemon_breeder_app/ui/features/pokemon/components/pokemon_info_view.dart';
+import 'package:pokemon_breeder_app/ui/features/evolution/components/pokemon_compare_view.dart';
+import 'package:pokemon_breeder_app/ui/features/evolution/components/evolution_action_buttons.dart';
 
 /// 進化確認画面のパラメータ。
 class EvolutionConfirmationParams {
@@ -48,14 +49,17 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DsSpacing.xl),
-            _PokemonCompareView(
-              beforePokemon: params.beforePokemon,
-              afterPokemon: params.afterPokemon,
+            PokemonCompareView(
+              config: PokemonCompareConfig(
+                beforePokemon: params.beforePokemon,
+                afterPokemon: params.afterPokemon,
+              ),
             ),
             const Spacer(),
-            _EvolutionActionButtons(
-              onCancel: () => context.pop(),
-              onConfirm: () async {
+            EvolutionActionButtons(
+              config: EvolutionActionButtonsConfig(
+                onCancel: () => context.pop(),
+                onConfirm: () async {
                 try {
                   // ローディング表示（必要に応じて）
                   showDialog(
@@ -117,7 +121,8 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
                     );
                   }
                 }
-              },
+                },
+              ),
             ),
             const SizedBox(height: DsSpacing.l),
           ],
@@ -127,80 +132,3 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
   }
 }
 
-/// 進化前後のポケモン比較表示用のWidgetクラス
-class _PokemonCompareView extends StatelessWidget {
-  const _PokemonCompareView({
-    required this.beforePokemon,
-    required this.afterPokemon,
-  });
-
-  /// 進化前のポケモン
-  final Pokemon beforePokemon;
-
-  /// 進化後のポケモン
-  final Pokemon afterPokemon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        PokemonInfoView(
-          name: beforePokemon.displayName,
-          pokedexNumber: beforePokemon.formattedPokedexNumber,
-          type1: '？', // TODO: 実際のタイプ情報を取得
-          type2: null,
-        ),
-        const SizedBox(width: DsSpacing.l),
-        const Icon(
-          Icons.arrow_forward,
-          size: DsDimension.iconSizeL,
-        ),
-        const SizedBox(width: DsSpacing.l),
-        PokemonInfoView(
-          name: afterPokemon.displayName,
-          pokedexNumber: afterPokemon.formattedPokedexNumber,
-          type1: '？', // TODO: 実際のタイプ情報を取得
-          type2: null,
-        ),
-      ],
-    );
-  }
-}
-
-/// 進化確認画面のアクションボタン用のWidgetクラス
-class _EvolutionActionButtons extends StatelessWidget {
-  const _EvolutionActionButtons({
-    required this.onCancel,
-    required this.onConfirm,
-  });
-
-  /// キャンセルボタンタップ時のコールバック
-  final VoidCallback onCancel;
-
-  /// 承認ボタンタップ時のコールバック
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: DsButton(
-            onPressed: onCancel,
-            label: 'キャンセル',
-            type: DsButtonType.destructive,
-          ),
-        ),
-        const SizedBox(width: DsSpacing.l),
-        Expanded(
-          child: DsButton(
-            onPressed: onConfirm,
-            label: '承認',
-            type: DsButtonType.primary,
-          ),
-        ),
-      ],
-    );
-  }
-}
