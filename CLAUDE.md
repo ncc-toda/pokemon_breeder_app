@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Dependencies**: `make pub_get` - Install dependencies for all packages
 - **Testing**: `make test` - Run all tests across packages  
 - **Build Analysis**: `make analyze` - Run static analysis on all packages
-- **Formatting**: `make format` - Format all Dart code
+- **Formatting**: `make format_all` - Format all Dart code
 - **Code Generation**: `make generate` - Run build_runner for all packages
 - **Clean Build**: `make clean_pub_get` - Clean and reinstall dependencies
 
