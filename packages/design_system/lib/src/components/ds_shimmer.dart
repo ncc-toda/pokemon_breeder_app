@@ -52,10 +52,10 @@ class DsShimmer extends StatelessWidget {
   }
 }
 
-/// Pokemon一覧表示用のShimmerアイテム。
-class DsPokemonListShimmer extends StatelessWidget {
-  /// Pokemon一覧表示用のShimmerアイテムを作成する。
-  const DsPokemonListShimmer({super.key});
+/// リスト項目表示用のShimmerアイテム。
+class DsListItemShimmer extends StatelessWidget {
+  /// リスト項目表示用のShimmerアイテムを作成する。
+  const DsListItemShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -156,6 +156,8 @@ class DsSearchEmptyState extends StatelessWidget {
     super.key,
     this.query = '',
     this.onClear,
+    this.emptyMessage,
+    this.suggestionMessage,
   });
 
   /// 検索クエリ
@@ -163,6 +165,12 @@ class DsSearchEmptyState extends StatelessWidget {
 
   /// クリア操作のコールバック
   final VoidCallback? onClear;
+
+  /// 検索結果が見つからない場合のメッセージ
+  final String? emptyMessage;
+
+  /// 検索提案メッセージ
+  final String? suggestionMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +187,7 @@ class DsSearchEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: DsSpacing.m),
             Text(
-              '"$query" に一致するポケモンが見つかりませんでした',
+              emptyMessage ?? '"$query" に一致する項目が見つかりませんでした',
               style: DsTypography.titleMedium.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -187,7 +195,7 @@ class DsSearchEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: DsSpacing.s),
             Text(
-              '別のキーワードで検索してみてください',
+              suggestionMessage ?? '別のキーワードで検索してみてください',
               style: DsTypography.bodySmall.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

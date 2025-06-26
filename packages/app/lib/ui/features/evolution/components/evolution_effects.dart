@@ -439,3 +439,65 @@ class RadialBurstPainter extends CustomPainter {
         oldDelegate.color != color;
   }
 }
+
+/// 進化に使用するポケモン画像コンポーネント。
+class DsEvolutionPokemonImage extends StatelessWidget {
+  /// 進化用ポケモン画像を作成します。
+  const DsEvolutionPokemonImage({
+    required this.imageUrl,
+    required this.name,
+    super.key,
+    this.size = 150,
+  });
+
+  /// ポケモンの画像URL
+  final String imageUrl;
+
+  /// ポケモンの名前
+  final String name;
+
+  /// 画像のサイズ
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary,
+              width: 2,
+            ),
+          ),
+          child: ClipOval(
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  child: Icon(
+                    Icons.catching_pokemon,
+                    size: size * 0.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          name,
+          style: Theme.of(context).textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
