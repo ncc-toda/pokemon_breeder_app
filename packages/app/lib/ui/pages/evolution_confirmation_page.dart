@@ -72,7 +72,7 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
 
                     // 進化処理を実行
                     final evolutionUseCase =
-                        ref.read(evolvePokemonUseCaseProvider.notifier);
+                        ref.read(evolvePokemonUseCaseProvider);
                     final result =
                         await evolutionUseCase.evolve(params.partyPokemonId);
 
