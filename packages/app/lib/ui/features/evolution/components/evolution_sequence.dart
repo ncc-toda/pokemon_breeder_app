@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'ds_evolution_effects.dart';
+import 'evolution_effects.dart';
 
 /// アニメーション段階とタイミングを管理するクラス
 class _EvolutionTimeline {
@@ -320,9 +320,9 @@ class _DsEvolutionSequenceState extends State<DsEvolutionSequence>
 /// 進化アニメーション用のポケモン画像ウィジェット。
 ///
 /// 一貫したサイズとスタイルでポケモン画像を表示します。
-class DsEvolutionPokemonImage extends StatelessWidget {
+class EvolutionPokemonImage extends StatelessWidget {
   /// 進化アニメーション用のポケモン画像を作成します。
-  const DsEvolutionPokemonImage({
+  const EvolutionPokemonImage({
     required this.imageUrl,
     required this.name,
     super.key,

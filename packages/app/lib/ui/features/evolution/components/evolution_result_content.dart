@@ -1,7 +1,9 @@
 import 'dart:async';
-import 'package:design_system/design_system.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+
+import 'evolution_effects.dart';
+import 'evolution_sequence.dart';
 
 /// 進化結果コンテンツの設定
 class EvolutionResultContentConfig {

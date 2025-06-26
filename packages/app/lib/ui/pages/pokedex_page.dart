@@ -121,7 +121,10 @@ class PokedexPage extends HookConsumerWidget {
               data: (pokemons) {
                 // 検索結果が空の場合の処理
                 if (searchQuery.isNotEmpty && filteredPokemons.isEmpty) {
-                  return DsSearchEmptyState(query: searchQuery);
+                  return DsSearchEmptyState(
+                    query: searchQuery,
+                    emptyMessage: '"$searchQuery" に一致するポケモンが見つかりませんでした',
+                  );
                 }
 
                 return PokemonListView(
@@ -165,7 +168,7 @@ class _PokemonListShimmer extends StatelessWidget {
       padding: DsPadding.allS,
       itemCount: 10, // 初期表示用のShimmerアイテム数
       itemBuilder: (context, index) {
-        return const DsPokemonListShimmer();
+        return const DsListItemShimmer();
       },
     );
   }
