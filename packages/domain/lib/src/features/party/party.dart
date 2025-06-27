@@ -71,8 +71,8 @@ sealed class PartySlot with _$PartySlot {
   bool get canEvolve {
     if (this is _PartySlotFilled) {
       final filled = this as _PartySlotFilled;
-      return filled.breedingCounter >= 10 && 
-             EvolutionDataHelper.canEvolve(filled.pokemonId);
+      return filled.breedingCounter >= 10 &&
+          EvolutionDataHelper.canEvolve(filled.pokemonId);
     }
     return false;
   }

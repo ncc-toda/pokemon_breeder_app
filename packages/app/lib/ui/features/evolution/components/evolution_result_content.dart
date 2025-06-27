@@ -172,7 +172,9 @@ class _EvolutionResultContentState extends State<EvolutionResultContent>
                           child: Column(
                             children: [
                               Text(
-                                widget.config.isEvolution ? 'おめでとう！' : '完了しました！',
+                                widget.config.isEvolution
+                                    ? 'おめでとう！'
+                                    : '完了しました！',
                                 style: theme.textTheme.headlineLarge?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
