@@ -112,6 +112,7 @@ class PartyPage extends HookConsumerWidget {
                                                 partyPokemonId:
                                                     filled.partyPokemonId,
                                                 canEvolve: slot.canEvolve,
+                                                canDevolve: slot.canDevolve,
                                                 onDeleteConfirm: () =>
                                                     showDialog<void>(
                                                   context: context,

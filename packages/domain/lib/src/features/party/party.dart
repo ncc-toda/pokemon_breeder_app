@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../pokemon/evolution_data.dart';
 
 part 'party.freezed.dart';
 
@@ -70,7 +71,17 @@ sealed class PartySlot with _$PartySlot {
   bool get canEvolve {
     if (this is _PartySlotFilled) {
       final filled = this as _PartySlotFilled;
-      return filled.breedingCounter >= 10;
+      return filled.breedingCounter >= 10 && 
+             EvolutionDataHelper.canEvolve(filled.pokemonId);
+    }
+    return false;
+  }
+
+  /// 退化可能かどうかを判定する。
+  bool get canDevolve {
+    if (this is _PartySlotFilled) {
+      final filled = this as _PartySlotFilled;
+      return EvolutionDataHelper.canDevolve(filled.pokemonId);
     }
     return false;
   }
