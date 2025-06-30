@@ -6,22 +6,26 @@ import 'package:domain/domain.dart';
 import 'package:pokemon_breeder_app/ui/features/evolution/components/pokemon_compare_view.dart';
 import 'package:pokemon_breeder_app/ui/features/evolution/components/evolution_action_buttons.dart';
 
-/// 進化確認画面のパラメータ。
+/// 進化・退化確認画面のパラメータ。
 class EvolutionConfirmationParams {
   const EvolutionConfirmationParams({
     required this.partyPokemonId,
     required this.beforePokemon,
     required this.afterPokemon,
+    this.isEvolution = true,
   });
 
   /// パーティポケモンのID
   final int partyPokemonId;
 
-  /// 進化前のポケモン
+  /// 変化前のポケモン
   final Pokemon beforePokemon;
 
-  /// 進化後のポケモン
+  /// 変化後のポケモン
   final Pokemon afterPokemon;
+
+  /// 進化かどうか（true: 進化、false: 退化）
+  final bool isEvolution;
 }
 
 class EvolutionConfirmationPage extends HookConsumerWidget {
@@ -35,8 +39,8 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DsScaffold(
-      topBarContent: const DsTopBar(
-        content: Text('進化確認'),
+      topBarContent: DsTopBar(
+        content: Text(params.isEvolution ? '進化確認' : '退化確認'),
       ),
       body: Padding(
         padding: DsPadding.allL,
@@ -44,7 +48,9 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
           children: [
             const Spacer(),
             Text(
-              '${params.beforePokemon.displayName}は ${params.afterPokemon.displayName} に進化します。\nよろしいですか？',
+              params.isEvolution
+                  ? '${params.beforePokemon.displayName}は ${params.afterPokemon.displayName} に進化します。\nよろしいですか？'
+                  : '${params.beforePokemon.displayName}は ${params.afterPokemon.displayName} に退化します。\nよろしいですか？',
               style: DsTypography.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -70,11 +76,12 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
                       ),
                     );
 
-                    // 進化処理を実行
+                    // 進化・退化処理を実行
                     final evolutionUseCase =
                         ref.read(evolvePokemonUseCaseProvider);
-                    final result =
-                        await evolutionUseCase.evolve(params.partyPokemonId);
+                    final result = params.isEvolution
+                        ? await evolutionUseCase.evolve(params.partyPokemonId)
+                        : await evolutionUseCase.devolve(params.partyPokemonId);
 
                     // ローディングを閉じる
                     if (context.mounted) {
@@ -83,17 +90,18 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
 
                     result.when(
                       success: (evolutionData) {
-                        // 進化成功：進化結果画面に遷移
+                        // 処理成功：結果画面に遷移
                         if (context.mounted) {
                           context.pushReplacement('/evolution-result', extra: {
                             'beforePokemon': params.beforePokemon,
                             'afterPokemon': params.afterPokemon,
                             'message': evolutionData.message,
+                            'isEvolution': params.isEvolution,
                           });
                         }
                       },
                       failure: (failure) {
-                        // 進化失敗：エラーメッセージを表示
+                        // 処理失敗：エラーメッセージを表示
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -115,7 +123,7 @@ class EvolutionConfirmationPage extends HookConsumerWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('進化処理中にエラーが発生しました: $error'),
+                          content: Text('処理中にエラーが発生しました: $error'),
                           backgroundColor: Theme.of(context).colorScheme.error,
                         ),
                       );

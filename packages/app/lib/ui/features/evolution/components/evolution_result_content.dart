@@ -5,24 +5,28 @@ import 'package:flutter/material.dart';
 import 'evolution_effects.dart';
 import 'evolution_sequence.dart';
 
-/// 進化結果コンテンツの設定
+/// 進化・退化結果コンテンツの設定
 class EvolutionResultContentConfig {
   const EvolutionResultContentConfig({
     required this.beforePokemon,
     required this.afterPokemon,
     required this.message,
     required this.onReturnToParty,
+    this.isEvolution = true,
     this.autoTransitionDelay = 4,
   });
 
-  /// 進化前のポケモン
+  /// 変化前のポケモン
   final Pokemon beforePokemon;
 
-  /// 進化後のポケモン
+  /// 変化後のポケモン
   final Pokemon afterPokemon;
 
   /// 結果メッセージ
   final String message;
+
+  /// 進化かどうか（true: 進化、false: 退化）
+  final bool isEvolution;
 
   /// パーティ画面に戻るコールバック
   final Future<void> Function() onReturnToParty;
@@ -168,7 +172,9 @@ class _EvolutionResultContentState extends State<EvolutionResultContent>
                           child: Column(
                             children: [
                               Text(
-                                'おめでとう！',
+                                widget.config.isEvolution
+                                    ? 'おめでとう！'
+                                    : '完了しました！',
                                 style: theme.textTheme.headlineLarge?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -183,7 +189,9 @@ class _EvolutionResultContentState extends State<EvolutionResultContent>
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${widget.config.beforePokemon.displayName}は\n${widget.config.afterPokemon.displayName}に進化した！',
+                                widget.config.isEvolution
+                                    ? '${widget.config.beforePokemon.displayName}は\n${widget.config.afterPokemon.displayName}に進化した！'
+                                    : '${widget.config.beforePokemon.displayName}は\n${widget.config.afterPokemon.displayName}に退化した！',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,

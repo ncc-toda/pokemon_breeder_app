@@ -10,6 +10,7 @@ class PokemonOptionsConfig {
     required this.pokemon,
     required this.partyPokemonId,
     required this.canEvolve,
+    required this.canDevolve,
     this.onDeleteConfirm,
   });
 
@@ -21,6 +22,9 @@ class PokemonOptionsConfig {
 
   /// 進化可能かどうか
   final bool canEvolve;
+
+  /// 退化可能かどうか
+  final bool canDevolve;
 
   /// 削除確認ダイアログを表示するコールバック
   final VoidCallback? onDeleteConfirm;
@@ -63,6 +67,24 @@ class PokemonOptionsBottomSheet extends HookConsumerWidget {
               onTap: () {
                 Navigator.pop(context);
                 _handleEvolution(context, ref);
+              },
+            ),
+          if (config.canDevolve)
+            ListTile(
+              leading: Icon(
+                Icons.undo,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              title: Text(
+                '退化する',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _handleDevolution(context, ref);
               },
             ),
           ListTile(
@@ -114,6 +136,49 @@ class PokemonOptionsBottomSheet extends HookConsumerWidget {
       partyPokemonId: config.partyPokemonId,
       beforePokemon: config.pokemon,
       afterPokemon: afterPokemon,
+      isEvolution: true,
+    );
+
+    context.push('/evolution-confirmation', extra: params);
+  }
+
+  /// 退化処理を実行する
+  void _handleDevolution(BuildContext context, WidgetRef ref) {
+    // 退化先のポケモンIDを取得
+    final devolutionTargetId =
+        EvolutionDataHelper.getDevolutionTarget(config.pokemon.id);
+    if (devolutionTargetId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('退化先のポケモンが見つかりません'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 退化先のポケモンデータを取得
+    final allPokemonsAsync = ref.read(pokemonStateProvider);
+    final allPokemons = allPokemonsAsync.valueOrNull ?? [];
+    final afterPokemon =
+        allPokemons.where((p) => p.id == devolutionTargetId).firstOrNull;
+
+    if (afterPokemon == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('退化先のポケモンデータが見つかりません'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 退化確認画面に遷移（進化確認画面を汎用化して使用）
+    final params = EvolutionConfirmationParams(
+      partyPokemonId: config.partyPokemonId,
+      beforePokemon: config.pokemon,
+      afterPokemon: afterPokemon,
+      isEvolution: false,
     );
 
     context.push('/evolution-confirmation', extra: params);

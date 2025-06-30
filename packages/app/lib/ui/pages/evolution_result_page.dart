@@ -36,22 +36,26 @@ class _GoRouterEvolutionNavigationService
   }
 }
 
-/// 進化結果画面のパラメータ。
+/// 進化・退化結果画面のパラメータ。
 class EvolutionResultParams {
   const EvolutionResultParams({
     required this.beforePokemon,
     required this.afterPokemon,
     required this.message,
+    this.isEvolution = true,
   });
 
-  /// 進化前のポケモン
+  /// 変化前のポケモン
   final Pokemon beforePokemon;
 
-  /// 進化後のポケモン
+  /// 変化後のポケモン
   final Pokemon afterPokemon;
 
   /// 結果メッセージ
   final String message;
+
+  /// 進化かどうか（true: 進化、false: 退化）
+  final bool isEvolution;
 }
 
 class EvolutionResultPage extends HookConsumerWidget {
@@ -74,6 +78,7 @@ class EvolutionResultPage extends HookConsumerWidget {
         beforePokemon: params.beforePokemon,
         afterPokemon: params.afterPokemon,
         message: params.message,
+        isEvolution: params.isEvolution,
         onReturnToParty: () => navigationService.returnToPartyWithRefresh(ref),
         autoTransitionDelay: autoTransitionDelay,
       ),

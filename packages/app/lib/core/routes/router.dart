@@ -40,6 +40,7 @@ final goRouter = GoRouter(
           beforePokemon: extra['beforePokemon'],
           afterPokemon: extra['afterPokemon'],
           message: extra['message'],
+          isEvolution: extra['isEvolution'] ?? true,
         );
         return MaterialPage(
           child: EvolutionResultPage(params: params),
